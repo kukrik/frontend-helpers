@@ -1,0 +1,689 @@
+/* COLORS */
+:root {
+    --nav-blue: #00539c;
+    --nav-blue-soft: #e6E7eb;
+    --nav-gray: #6b7280;
+    --nav-gray-hover: #374151;
+    --nav-blue-hover: #1e68B1;
+    --nav-background: rgba(255,255,255,0.12);
+    --nav-arrow: rgba(255,255,255,0.7);
+
+    --mobile-bg: #ffffff;
+    --mobile-text: #111827;
+    --mobile-border: #e5e7eb;
+    --mobile-accent: var(--nav-blue);
+    --mobile-muted: #6b7280;
+
+    --mobile-sub-background: #f9fafb;
+    --mobile-accordion-border: #ccc;
+    --mobile-plus-minus: var(--nav-gray-hover);
+}
+
+.main-nav {
+    position: relative;
+}
+
+.main-menu {
+    display: flex;
+    gap: 1.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.main-menu > li {
+    position: relative; /* dropdown ankur */
+}
+
+.main-menu > li > a {
+    position: relative;
+    display: inline-block;
+    padding: 0.25rem 0.25rem 0.4rem; /* natuke ruumi joonele */
+    color: var(--nav-gray-hover);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* peida nooled esimesel tasemel */
+.main-menu > li > a > .sub-arrow {
+    display: none;
+}
+
+/* näita nooli ainult alammenüüdes */
+.main-menu li ul li > a > .sub-arrow {
+    display: inline-block;
+    margin-left: auto;
+}
+
+.main-menu > li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 16px; /* <-- sild joone ja dropdowni vahel */
+}
+
+.main-menu > li > a::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--nav-blue);
+    transition: width 0.25s ease, left 0.25s ease;
+}
+
+.main-menu > li:hover > a::after,
+.main-menu > li > a:focus-visible::after {
+    width: 100%;
+    left: 0;
+}
+
+/* kõik alammenüüd */
+.main-menu li > ul {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+
+    min-width: 220px;
+    max-width: 320px;
+
+    background: var(--nav-blue);
+    margin-top: 6px;
+    padding: 0.75rem 0;
+    border-radius: 6px;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1000;
+}
+
+/* Hover-bridge 2. ja 3. taseme vahel */
+.main-menu li ul li {
+    position: relative;
+}
+
+.main-menu li ul li > ul::before {
+    content: "";
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    left: -10px;      /* sild algab vasakult */
+    width: 10px;      /* silla laius */
+
+    background: transparent;
+}
+
+.main-menu li:hover > ul,
+.main-menu li:focus-within > ul {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.main-menu li > ul a {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.main-menu li > ul a:hover {
+    background: var(--nav-background);
+}
+
+.main-menu li ul li a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    /*padding: 0.45rem 1.2rem;*/
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.main-menu > li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 16px; /* <-- sild joone ja dropdowni vahel */
+}
+
+.main-menu li ul li a:hover,
+.main-menu li ul li a:focus-visible {
+    background: var(--nav-background);
+}
+
+.main-menu li ul {
+    max-width: 320px;
+}
+
+@supports (width: max-content) {
+    .main-menu li > ul {
+        width: max-content;
+        max-width: 320px;
+    }
+}
+
+.main-menu li ul li a {
+    white-space: normal;
+    line-height: 1.35;
+}
+
+/* KOLMANDAST TASEMEST ALATES */
+
+.menu-item {
+    position: relative;
+}
+
+.submenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    min-width: 220px;
+    max-width: 320px;
+
+    background: #0054a6;
+    border-radius: 6px;
+    padding: 0.5rem 0;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+
+    transition: opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s ease;
+
+    z-index: 1000;
+}
+
+.menu-item:hover > .submenu,
+.menu-item:focus-within > .submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.submenu .submenu {
+    top: 0;
+    left: 100%;
+    margin-left: 0.5rem;
+
+    transform: translateX(8px);
+}
+
+.menu-item:hover > .submenu .submenu,
+.menu-item:focus-within > .submenu .submenu {
+    transform: translateX(0);
+}
+
+.sub-arrow {
+    display: inline-block;
+    margin-left: 0.4rem;
+    width: 0;
+    height: 0;
+
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 5px solid var(--nav-arrow);
+}
+
+.main-menu > .menu-item > a > .sub-arrow {
+    transform: rotate(90deg);
+}
+
+.submenu a {
+    display: block;
+    padding: 0.45rem 1.2rem;
+
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.35;
+
+    white-space: normal;        /* oluline */
+    word-break: break-word;
+}
+
+/* 3. tase ja sügavam */
+.main-menu li ul li ul {
+    margin-left: 6px;
+}
+
+/* =========================
+   MOBILE STYLES
+========================= */
+
+/* Mobile nav overlay */
+
+/* Mobile top bar */
+.mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.2rem 1rem;
+    border-bottom: 1px solid var(--mobile-border);
+    background: #fff;
+    z-index: 1001;
+    margin-bottom: 1.5rem;
+}
+
+/* Näita/peida */
+.mobile-only { display: none; }
+/*.desktop-only { display: block; }*/
+
+@media only screen and (max-width: 1200px) {
+    .mobile-only { display: flex; }
+    .desktop-only { display: none; }
+}
+
+.mobile-logo img {
+    height: 3rem;
+}
+
+/* Hamburger */
+.mobile-nav-toggle {
+    background: none;
+    border: 0;
+    padding: 0;
+    display: grid;
+    gap: 5px;
+}
+
+.mobile-nav-toggle span {
+    width: 26px;
+    height: 2px;
+    background: var(--mobile-text);
+    display: block;
+}
+
+/* Drawer */
+.mobile-nav {
+    position: fixed;
+    inset: 0; /* top:0 right:0 bottom:0 left:0 */
+    z-index: 1001;
+
+    background: #fff;
+
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-nav.is-open {
+    transform: translateX(0);
+}
+
+.mobile-nav-inner {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+body.nav-open {
+    overflow: hidden;
+    height: 100vh;
+}
+
+.mobile-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--mobile-border);
+}
+
+.mobile-nav-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
+
+    flex: 1;
+}
+
+body.is-mobile-nav-open {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Backdrop */
+.mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 1000;
+}
+
+/* =========================
+   MOBILE ACCORDION MENU
+========================= */
+
+.mobile-menu {
+    list-style: none;
+    margin-top: 2rem;
+    padding: 0;
+}
+
+.mobile-menu li {
+    border-bottom: 0;
+}
+
+/* Ainult sama taseme elemendid */
+.mobile-menu > li {
+    /*border-bottom: 1px solid var(--mobile-accordion-border);*/
+}
+
+.mobile-menu > li > a,
+.mobile-menu .submenu > li > a {
+    border-bottom: 1px solid var(--mobile-accordion-border);
+}
+/* Ka alamtasemed, aga eraldi */
+.mobile-menu .submenu > li {
+    background: transparent;
+}
+
+/* KÕIK lingid */
+.mobile-menu a {
+    display: block;
+    padding: 0.75rem 0.25rem;
+    color: var(--mobile-text);
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1.3;
+
+    /* FIX: border igale kirjereale sõltumata tasemest */
+    border-bottom: 1px solid var(--mobile-accordion-border);
+}
+
+/* 1. tase */
+.mobile-menu > li > a {
+    font-weight: 600;
+}
+
+/* 2+ tasemed */
+.mobile-menu .submenu a {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+/* Hover / focus */
+.mobile-menu a:hover,
+.mobile-menu a:focus-visible {
+    background: rgba(0,0,0,0.04);
+}
+
+/* =========================
+   PLUS / MINUS
+========================= */
+
+.mobile-menu .has-children > a {
+    position: relative;
+    padding-right: 2.2rem;
+}
+
+.mobile-menu .has-children > a::after {
+    content: "";
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--mobile-plus-minus);
+}
+
+.mobile-menu .has-children.has-submenu > a::after {
+    content: "+";
+}
+
+.mobile-menu .has-children.has-submenu.is-open > a::after {
+    content: "–";
+    color: var(--mobile-plus-minus);
+}
+
+/* =========================
+   MOBILE: submenu peab olema accordion (mitte absolute)
+========================= */
+
+.mobile-menu .submenu {
+    /* override desktop .submenu absolute dropdown */
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+
+    min-width: 0 !important;
+    max-width: none !important;
+
+    list-style: none;
+    display: none;              /* accordion: suletud */
+    margin: 0;                  /* ei mingeid “hüppeid” */
+    padding: 0;                 /* konteiner jääb täislai */
+    border: 0;
+
+    /* FIX: taust ainult AVATUD olekus (mitte suletuna) */
+    background: transparent;
+}
+
+.mobile-menu .submenu .submenu { var(--mobile-sub-background); }
+.mobile-menu .submenu .submenu .submenu { var(--mobile-sub-background); }
+
+/* FIX: hierarhia nihutamine nüüd linkide padding-left'iga (kuni 5 taset) */
+.mobile-menu > li > a { padding-left: 0.25rem; }
+.mobile-menu > li > .submenu > li > a { padding-left: 1.25rem; }
+.mobile-menu > li > .submenu > li > .submenu > li > a { padding-left: 2.25rem; }
+.mobile-menu > li > .submenu > li > .submenu > li > .submenu > li > a { padding-left: 3.25rem; }
+.mobile-menu > li > .submenu > li > .submenu > li > .submenu > li > .submenu > li > a { padding-left: 4.25rem; }
+
+.mobile-menu .has-children.is-open > .submenu {
+    display: block;
+
+    /* Taust tekib ainult siis, kui submenu on avatud */
+    background: var(--mobile-sub-background);
+}
+
+/* FIX: ära kuhja tausta sügavamates tasemetes (jääb “üks kord”) */
+.mobile-menu .has-children.is-open > .submenu .submenu {
+    background: transparent;
+}
+
+/* ############################################################ */
+
+.mobile-nav-items {
+    margin: 3rem 0 1rem;
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    gap: 2rem;
+}
+
+.mobile-search {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    max-width: 520px;
+    margin-inline: auto;
+
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    padding: 0.15rem 0.4rem;
+
+    transition: border-color .2s ease,
+    box-shadow .2s ease,
+    background-color .2s ease;
+}
+
+.search-btn img {
+    width: 25px;
+    height: 25px;
+    display: block;
+}
+
+.mobile-search input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 0; /* VÄGA OLULINE */
+
+    padding: 0.45rem 0.65rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+
+    background: transparent;
+}
+
+.mobile-search input::placeholder {
+    color: #9ca3af;
+}
+
+.mobile-search button {
+    flex-shrink: 0;
+}
+
+.search-btn {
+    border: none;
+    background: transparent;
+    padding: 0.4rem;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    transition: background-color .2s ease;
+}
+
+.mobile-search:hover {
+    background: #fff;
+    border-color: #0054A6;
+}
+
+.mobile-search:focus-within {
+    border-color: #0054A6;
+    box-shadow: 0 0 0 2px rgba(0, 84, 166, 0.15);
+}
+
+.mobile-search:focus-visible {
+    outline: 2px solid #0054A6;
+    outline-offset: 2px;
+}
+
+.mobile-search:hover .search-btn img {
+    filter: brightness(0) saturate(100%) invert(27%) sepia(86%) saturate(2391%) hue-rotate(199deg);
+}
+
+.mobile-nav-search,
+.mobile-search {
+    width: 100%;
+}
+
+@media (max-width: 767px) and (max-height: 430px) {
+    .mobile-search {
+        max-width: 360px;
+    }
+}
+
+/* Telefon-landscape ja üldiselt < 768px: hoia pill kitsam ja keskel */
+@media (max-width: 767px) {
+    .mobile-search {
+        max-width: 420px;
+    }
+}
+
+/* >= 768px (nt tablet): võid jätta sama või muuta */
+@media (min-width: 768px) {
+    .mobile-search {
+        max-width: 420px;
+    }
+}
+
+.mobile-badges {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.mobile-badges img {
+    max-width: 100%;
+    display: block;
+}
+
+.mobile-badges .badge img {
+    height: 2.5rem;
+    width: 10vw;
+}
+
+/* =========================
+   MOBILE NAV CLOSE
+========================= */
+
+.mobile-nav-close {
+    appearance: none;
+    background: none;
+    border: 0;
+
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 400;
+
+    color: var(--mobile-text);
+    cursor: pointer;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+/* Hover / active (natuke “Apple’i tunnet”) */
+
+.mobile-nav-close:hover {
+    background: rgba(0,0,0,0.06);
+}
+
+.mobile-nav-close:active {
+    background: rgba(0,0,0,0.12);
+}
+
+/* Focus (accessibility) */
+
+.mobile-nav-close:focus-visible {
+    outline: 2px solid var(--mobile-accent);
+    outline-offset: 2px;
+}

@@ -1,0 +1,144 @@
+/* sidebar.css */
+
+/* Container */
+.sidebar-nav {
+    --sb-text: #374151;
+    --sb-muted: #374151; /*#6b7280;*/
+    --sb-border: #c4c4c8;
+    --sb-bg: #ffffff;
+    --sb-hover: rgba(0, 0, 0, 0.04);
+    --sb-active-bg: rgba(0, 0, 0, 0.06);
+    --sb-radius: 6px;
+    --sb-indent: 1.0rem;
+    --sb-toggle-size: 44px; /* mugav klikiala */
+    --sb-speed: 220ms;
+
+    /* Rea kõrgus: (line-height * font-size) + (padding-top + padding-bottom) */
+    --sb-row-height: calc(1.3em + 1.5rem);
+
+    background: var(--sb-bg);
+    color: var(--sb-text);
+
+    --sb-chevron-size: 14px;
+    --sb-chevron-stroke: 2.25; /* <- KLIENDI KAUPA MUUDAD SEDA */
+}
+
+/* Lists reset */
+.sidebar-menu,
+.sidebar-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Items */
+.sidebar-item {
+    position: relative;
+    border-bottom: 0; /* border on linkidel, et ei tekiks “kadumist”/duubeldamist */
+}
+
+/* Links */
+.sidebar-link {
+    display: block;
+    padding: 0.75rem 0.5rem;
+    padding-right: var(--sb-toggle-size); /* ruum noolele */
+    text-decoration: none;
+    color: var(--sb-text);
+    line-height: 1.3;
+
+    /* FIX: border igale kirjereale sõltumata tasemest */
+    border-bottom: 1px solid var(--sb-border);
+}
+
+.sidebar-link:hover,
+.sidebar-link:focus-visible {
+    background: var(--sb-hover);
+}
+
+.sidebar-link.is-active {
+    background: var(--sb-active-bg);
+    font-weight: 600;
+}
+
+.sidebar-item.is-hidden {
+    display: none;
+}
+
+/* Indent taseme kaupa (lihtne ja töökindel) */
+.sidebar-submenu .sidebar-link { padding-left: calc(0.5rem + var(--sb-indent) * 1); }
+.sidebar-submenu .sidebar-submenu .sidebar-link { padding-left: calc(0.5rem + var(--sb-indent) * 2); }
+.sidebar-submenu .sidebar-submenu .sidebar-submenu .sidebar-link { padding-left: calc(0.5rem + var(--sb-indent) * 3); }
+.sidebar-submenu .sidebar-submenu .sidebar-submenu .sidebar-submenu .sidebar-link { padding-left: calc(0.5rem + var(--sb-indent) * 4); }
+
+/* Toggle (JS lisab <span class="sidebar-toggle">) */
+.sidebar-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: var(--sb-toggle-size);
+
+    /* FIX: ära venita toggle'it avatud haru kõrguseks */
+    height: var(--sb-row-height);
+
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: var(--sb-muted);
+}
+
+/* SVG ikoon */
+.sidebar-toggle-icon {
+    width: var(--sb-chevron-size);
+    height: var(--sb-chevron-size);
+    display: block;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--sb-chevron-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    transform: rotate(0deg);
+    transition: transform var(--sb-speed) ease;
+}
+
+/* Avatuna pöörame alla */
+.sidebar-item.is-open > .sidebar-toggle .sidebar-toggle-icon {
+    transform: rotate(90deg);
+}
+
+/* Toggle hover/focus */
+.sidebar-toggle:hover {
+    background: var(--sb-hover);
+}
+
+.sidebar-toggle:focus-visible {
+    outline: 2px solid #0054a6;
+    outline-offset: -2px;
+    border-radius: var(--sb-radius);
+}
+
+/* Submenu: animatsioon max-height'iga (JS seab max-height) */
+.sidebar-submenu {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height var(--sb-speed) ease;
+    will-change: max-height;
+}
+
+/* Kui JS on avanud, jääb max-height inline-stiilina; see reegel on fallback */
+.sidebar-item.is-open > .sidebar-submenu {
+    max-height: 999px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-submenu {
+        transition: none;
+    }
+    .sidebar-toggle-icon {
+        transition: none;
+    }
+}
