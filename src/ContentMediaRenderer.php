@@ -2,6 +2,8 @@
 
     namespace QCubed\Plugin;
 
+    use ContentCoverMedia;
+    use Files;
     use QCubed\Control\ControlBase;
     use QCubed\Control\FormBase;
     use QCubed\Control\Panel;

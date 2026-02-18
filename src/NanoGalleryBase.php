@@ -253,10 +253,6 @@
         public function createNodeParams(callable $callback): void
         {
             $this->nodeParamsCallback = $callback;
-
-//            print "<pre>";
-//            print_r($this->nodeParamsCallback);
-//            print "</pre>";
         }
 
         /**

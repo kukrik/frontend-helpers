@@ -2,6 +2,8 @@
 
     namespace QCubed\Plugin;
 
+    use ContentCoverMedia;
+    use Files;
     use QCubed\Control\ControlBase;
     use QCubed\Control\FormBase;
     use QCubed\Control\Panel;
@@ -40,7 +42,7 @@
         /** @var null|int Content cover media ID. */
         protected ?int $intContentCoverMediaId = null;
         /** @var null|string The path to the icon used for displaying multiple images. */
-        protected ?string $strMultiImagesIconPath = FRONTEND_URL . "/assets/images/multi-images-icon.svg";
+        protected ?string $strMultiImagesIconPath = FRONTEND_HELPERS_ASSETS_URL . "/images/multi-images-icon.svg";
         /** @var bool If true, show a fallback image when media is missing/invalid. */
         protected bool $blnRequireMedia = false;
         /** @var null|string Fallback image URL to show when media is missing and RequireMedia=true. */

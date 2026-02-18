@@ -1,6 +1,6 @@
 <?php
 
-    require_once __DIR__ . '/FrontendMediaRenderer.php';
+    use QCubed\Plugin\FrontendMediaRenderer;
 
     $news = $this->DataSource[0] ?? null;
     if (!$news) { return; }
@@ -11,7 +11,7 @@
     $objContentMediaRender->MediaTypeId = $news->getMediaTypeId();
     $objContentMediaRender->ContentCoverMediaId = $news->getContentCoverMediaId();
     $objContentMediaRender->RequireMedia = true;
-    $objContentMediaRender->EmptyMediaUrl = FRONTEND_URL . "/assets/images/no-media-300-175.png";
+    $objContentMediaRender->EmptyMediaUrl = FRONTEND_HELPERS_ASSETS_URL . "/images/no-media-300-175.png";
     $objContentMediaRender->UseWrapper = false;
 
     if ($news->getChangesId()) {
@@ -32,9 +32,7 @@
 
                     <span class="featured-change"><?php _p(_indent($news->getChanges(), 12), false); ?>
 
-                    </span><?php } ?>
-
-                </time>
+                    </span><?php } ?></time>
                 <div class="featured-excerpt">
                     <?php _p($news->getContent(), false) ?>
                 </div>
