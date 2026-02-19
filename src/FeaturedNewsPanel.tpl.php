@@ -11,7 +11,7 @@
     $objContentMediaRender->MediaTypeId = $news->getMediaTypeId();
     $objContentMediaRender->ContentCoverMediaId = $news->getContentCoverMediaId();
     $objContentMediaRender->RequireMedia = true;
-    $objContentMediaRender->EmptyMediaUrl = FRONTEND_HELPERS_ASSETS_URL . "/images/no-media-300-175.png";
+    $objContentMediaRender->EmptyMediaUrl = FRONTEND_HELPERS_ASSETS_URL . "/images/no-image-660-365.jpg";
     $objContentMediaRender->UseWrapper = false;
 
     if ($news->getChangesId()) {

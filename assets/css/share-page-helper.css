@@ -1,0 +1,30 @@
+/* =========================
+   DESIGN SHARE PAGE TOKENS
+========================= */
+
+:root {
+    /* COLORS */
+    --share-svg-icon-color: #495a74;
+    --share-btn-color-hover: #495a74;
+    --share-svg-icon-size: 1.5rem;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .page-content,
+    .page-content * {
+        visibility: visible;
+    }
+
+    .page-content {
+        position: absolute;
+        inset: 0;
+    }
+
+    .page-share * {
+        display: none;
+    }
+}
