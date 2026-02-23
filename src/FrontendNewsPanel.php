@@ -13,3 +13,24 @@
 
         public array $DataSource = [];
     }
+
+    /**
+     * EXAMPLE of using FeaturedNewsPanel and FrontendNewsPanel
+     *
+     * $this->pnlFeatured = new FeaturedNewsPanel($this);
+     * $this->pnlOld = new FrontendNewsPanel($this);
+     *
+     * $this->pnlFeatured->setDataBinder('FeaturedNews_Bind', $this);
+     * $this->pnlOld->setDataBinder('FrontendNews_Bind', $this);
+     *
+     * protected function FeaturedNews_Bind(FeaturedNewsPanel $pnl): void
+     * {
+     *      $pnl->DataSource = News::loadFrontPageNews(1, 0);
+     * }
+     *
+     * protected function FrontendNews_Bind(FrontendNewsPanel $pnl): void
+     * {
+     *      $pnl->DataSource = News::loadFrontPageNews(6, 1);
+     * }
+     *
+     */

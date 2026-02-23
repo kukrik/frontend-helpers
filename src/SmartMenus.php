@@ -714,5 +714,37 @@
                     }
             }
         }
-
     }
+
+    /**
+     * EXAMPLE of using SmartMenus
+     *
+     * $smartMenus = new SmartMenus($this);
+     * $smartMenus->setDataBinder('Menu_Bind');
+     * $smartMenus->createNodeParams([$this, 'Menu_Draw']);
+     *
+     * protected function Menu_Bind(): void
+     * {
+     *      $this->smartMenus->DataSource =
+     *          Menu::loadAll(QQ::Clause(QQ::OrderBy(QQN::menu()->Left),
+     *              QQ::expand(QQN::menu()->MenuContent))
+     *          );
+     * }
+     *
+     * public function Menu_Draw(Menu $objMenu): array
+     * {
+     *      $a['id'] = $objMenu->Id;
+     *      $a['parent_id'] = $objMenu->ParentId;
+     *      $a['depth'] = $objMenu->Depth;
+     *      $a['left'] = $objMenu->Left;
+     *      $a['right'] = $objMenu->Right;
+     *      $a['menu_text'] = Q\QString::htmlEntities($objMenu->MenuContent->MenuText);
+     *      $a['status'] = $objMenu->MenuContent->IsEnabled;
+     *      $a['redirect_url'] = $objMenu->MenuContent->RedirectUrl;
+     *      $a['homely_url'] = $objMenu->MenuContent->HomelyUrl;
+     *      $a['external_url'] = $objMenu->MenuContent->ExternalUrl;
+     *      $a['target_type'] = $objMenu->MenuContent->TargetType ? TargetType::toTarget($objMenu->MenuContent->TargetType) : null;
+     *      return $a;
+     * }
+     *
+     */

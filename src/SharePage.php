@@ -14,12 +14,16 @@
      * for sharing content through multiple channels such as bookmarks, copy links, social media,
      * and more. It allows dynamic rendering of buttons and integration with JavaScript functionalities.
      *
+     * @property string $Language Language of the control. Default is 'en'.
+     * @property string $Translations Path to the JSON file containing translations for the control.
+     * @property string $LangPath Path to the directory containing language files.
      * @property bool $ShowBookmark Whether to show the bookmark button. Default is true.
      * @property bool $ShowCopy Whether to show the copy link button. Default is true.
      * @property bool $ShowFacebook Whether to show the Facebook button. Default is true.
      * @property bool $ShowX Whether to show the X button. Default is true.
      * @property bool $ShowEmail Whether to show the email button. Default is true.
      * @property bool $ShowPrint Whether to show the print button. Default is true.
+     * @property bool $UseNativeShareOnMobile Whether to use native share functionality on mobile devices. Default is true.
      * @property string $ToastPosition Position of the toast message. Default is 'top-center'.
      * @property string $BookmarkText Text for the bookmark button. The default is 'Add to bookmarks'.
      * @property string $CopyText Text for the copy link button. The default is 'Copy link'.
@@ -32,12 +36,16 @@
      */
     class SharePage extends Panel
     {
+        protected ?string $strLanguage = null;
+        protected ?string $strTranslations = null;
+        protected ?string $strLangPath = null;
         protected bool $blnShowBookmark = false;
         protected bool $blnShowCopy = true;
         protected bool $blnShowFacebook = true;
         protected bool $blnShowX = true;
         protected bool $blnShowEmail = true;
         protected bool $blnShowPrint = true;
+        protected bool $blnUseNativeShareOnMobile = true;
         protected string $strToastPosition = 'top-center';
         protected string $strBookmarkText = 'Add to bookmarks';
         protected string $strCopyText = 'Copy link';
@@ -84,25 +92,10 @@
          */
         protected function getControlHtml(): string
         {
-            $options = [
-                'enableBookmark' => $this->blnShowBookmark,
-                'enableCopy' => $this->blnShowCopy,
-                'enableFacebook' => $this->blnShowFacebook,
-                'enableX' => $this->blnShowX,
-                'enableEmail' => $this->blnShowEmail,
-                'enablePrint' => $this->blnShowPrint,
-                'useNativeShareOnMobile' => true,
-                'toastPosition' => $this->strToastPosition
-            ];
-
-            $json = htmlspecialchars(json_encode($options, JSON_UNESCAPED_SLASHES), ENT_QUOTES);
-
-            $strHtml = sprintf(
-                '<div id="%s" class="page-share" data-share-options="%s">',
-                $this->ControlId,
-                $json
-            );
-
+            $strHtml = '<div id="' . $this->ControlId . '" class="page-share" data-share-options=\'';
+            $strHtml .= json_encode($this->makePHPOptions(),JSON_UNESCAPED_SLASHES);
+            $strHtml .= '\'>' . _nl();
+            
             if ($this->blnShowBookmark) {
                 $strHtml .= _nl(_indent('<button class="share-btn js-add-bookmark" aria-label="' . $this->strBookmarkText . '">', 1));
                 $strHtml .= _nl(_indent('<span class="share-svg-icon">', 2));
@@ -170,6 +163,28 @@
         }
 
         /**
+         * Generates an array of PHP options based on the control's current settings.
+         *
+         * @return array An associative array containing the configured options for the control.
+         */
+        protected function makePHPOptions(): array
+        {
+            $phpOptions = [];
+            if (!is_null($val = $this->Language)) {$phpOptions['language'] = $val;}
+            if (!is_null($val = $this->Translations)) {$phpOptions['translations'] = $val;}
+            if (!is_null($val = $this->LangPath)) {$phpOptions['langPath'] = $val;}
+            if (!is_null($val = $this->ShowBookmark)) {$phpOptions['enableBookmark'] = $val;}
+            if (!is_null($val = $this->ShowCopy)) {$phpOptions['enableCopy'] = $val;}
+            if (!is_null($val = $this->ShowFacebook)) {$phpOptions['enableFacebook'] = $val;}
+            if (!is_null($val = $this->ShowX)) {$phpOptions['enableX'] = $val;}
+            if (!is_null($val = $this->ShowEmail)) {$phpOptions['enableEmail'] = $val;}
+            if (!is_null($val = $this->ShowPrint)) {$phpOptions['enablePrint'] = $val;}
+            if (!is_null($val = $this->UseNativeShareOnMobile)) {$phpOptions['useNativeShareOnMobile'] = $val;}
+            if (!is_null($val = $this->ToastPosition)) {$phpOptions['toastPosition'] = $val;}
+            return $phpOptions;
+        }
+
+        /**
          * Generates and returns the JavaScript code to be executed at the end of the control's rendering process.
          *
          * @return string The JavaScript code appended with an initialization script for FrontendHelpersSharePage, if applicable.
@@ -179,9 +194,9 @@
             $str = parent::getEndScript();
 
             $str .= sprintf('
-                if (window.FrontendHelpersSharePage) {
-                    window.FrontendHelpersSharePage.init("%s");
-                }',
+if (window.FrontendHelpersSharePage) {
+    window.FrontendHelpersSharePage.init("#%s");
+}',
                 $this->ControlId
             );
 
@@ -199,12 +214,16 @@
         public function __get(string $strName): mixed
         {
             return match ($strName) {
+                'Language' => $this->strLanguage,
+                'Translations' => $this->strTranslations,
+                'LangPath' => $this->strLangPath,
                 'ShowBookmark' => $this->blnShowBookmark,
                 'ShowCopy' => $this->blnShowCopy,
                 'ShowFacebook' => $this->blnShowFacebook,
                 'ShowX' => $this->blnShowX,
                 'ShowEmail' => $this->blnShowEmail,
                 'ShowPrint' => $this->blnShowPrint,
+                'UseNativeShareOnMobile' => $this->blnUseNativeShareOnMobile,
                 'ToastPosition' => $this->strToastPosition,
                 'BookmarkText' => $this->strBookmarkText,
                 'CopyText' => $this->strCopyText,
@@ -228,6 +247,18 @@
         public function __set(string $strName, mixed $mixValue): void
         {
             switch ($strName) {
+                case 'Language':
+                    $this->strLanguage = Type::Cast($mixValue, Type::STRING);
+                    break;
+
+                case 'Translations':
+                    $this->strTranslations = Type::Cast($mixValue, Type::STRING);
+                    break;
+
+                case 'LangPath':
+                    $this->strLangPath = Type::Cast($mixValue, Type::STRING);
+                    break;
+
                 case 'ShowBookmark':
                     $this->blnShowBookmark = Type::Cast($mixValue, Type::BOOLEAN);
                     break;
@@ -250,6 +281,10 @@
 
                 case 'ShowPrint':
                     $this->blnShowPrint = Type::Cast($mixValue, Type::BOOLEAN);
+                    break;
+
+                case 'UseNativeShareOnMobile':
+                    $this->blnUseNativeShareOnMobile = Type::Cast($mixValue, Type::BOOLEAN);
                     break;
 
                 case 'ToastPosition':
@@ -288,3 +323,28 @@
             $this->blnModified = true;
         }
     }
+
+    /**
+     * EXAMPLE of using PageShare
+     *
+     * $objSharePage = new SharePage($this);
+     *
+     * //Defaults to 'en', so no need to add 'LangPath'.
+     * $objSharePage->Language = 'et';
+     * $objSharePage->LangPath = '/frontend-helpers/assets/lang';
+     *
+     * //By default, the ShowBookmark is false. If you want to enable it, set it to true.
+     * $objSharePage->ShowBookmark = true;
+     *
+     * // If you want internationalization, add t('Add to bookmarks') and so on...
+     * // and let the program generate, for example, Poedit in the selected languages and translate it, etc.
+     *
+     * $objSharePage->BookmarkText = 'Lisa järjehoidjasse';
+     * $objSharePage->CopyText = 'Kopeeri link';
+     * $objSharePage->FacebookText = 'Jaga Facebookis';
+     * $objSharePage->TwitterText = 'Jaga Twitteris';
+     * $objSharePage->EmailText = 'Saada kiri';
+     * $objSharePage->PrintText = 'Prindi';
+     * $objSharePage->UseWrapper = false; // (If optional)
+     *
+     */

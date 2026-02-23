@@ -1,0 +1,9 @@
+{
+  "language": "et",
+  "translations": {
+    "share_mail_subject_default": "Vaata seda linki",
+    "share_copy_success": "Link on kopeeritud",
+    "share_copy_fail": "Kopeerimine ei õnnestunud",
+    "share_bookmark_hint": "Järjehoidja lisamiseks kasuta"
+  }
+}

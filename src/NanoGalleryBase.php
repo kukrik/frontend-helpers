@@ -239,9 +239,9 @@
          */
         protected function registerFiles(): void
         {
-            $this->AddJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/nanogallery2/dist/jquery.nanogallery2.js");
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/nanogallery2/dist/jquery.nanogallery2.js");
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL. "/nanogallery2/src/css/nanogallery2.css");
-            $this->AddCssFile(QCUBED_BOOTSTRAP_CSS); // make sure they know
+            $this->addCssFile(QCUBED_BOOTSTRAP_CSS); // make sure they know
         }
 
         /**

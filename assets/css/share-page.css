@@ -1,10 +1,10 @@
 .share-toast {
     z-index: 9999;
 
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 10px 50px;
+    border-radius: 2px;
 
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.2;
 
     opacity: 0;
@@ -27,7 +27,7 @@
 .share-toast--pos-top-center {
     position: fixed;
     left: 50%;
-    top: 16px;
+    top: 10px;
     transform: translateX(-50%);
 }
 
@@ -38,26 +38,26 @@
 
 /* Types */
 .share-toast--info {
-    background: rgba(15, 23, 42, 0.92);
+    background: rgba(0, 83, 156, 0.9);
     color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(0, 83, 156, 0.9);
 }
 
 .share-toast--success {
-    background: rgba(22, 163, 74, 0.18);
-    color: #052e16;
+    background: rgba(47, 150, 1, 0.8);
+    color: #ffffff;
     border-color: rgba(22, 163, 74, 0.35);
     backdrop-filter: blur(6px);
 }
 
 .share-toast--error {
-    background: rgba(220, 38, 38, 0.18);
-    color: #450a0a;
+    background: rgba(220, 38, 38, 0.8);
+    color: #ffffff;
     border-color: rgba(220, 38, 38, 0.35);
     backdrop-filter: blur(6px);
 }
 
-/* Disabled nupud */
+/* Disabled buttons */
 .page-share .share-btn[disabled] {
     opacity: 0.5;
     cursor: not-allowed;

@@ -5,14 +5,12 @@
     namespace QCubed\Plugin;
 
     use QCubed as Q;
-    use QCubed\ApplicationBase;
     use QCubed\Control\FormBase;
     use QCubed\Control\ControlBase;
     use QCubed\Exception\Caller;
     use QCubed\Exception\InvalidCast;
     use QCubed\Exception\DataBind;
     use Exception;
-    use QCubed\Project\Application;
     use QCubed\Type;
 
     /**
@@ -369,5 +367,132 @@
                     }
             }
         }
-
     }
+
+    /**
+     * EXAMPLE of using ArchiveList + YearSidebar
+     *
+     * protected function resolveNewsMenuContentId(): ?int
+     * {
+     *      // Eeldus: sul on route-context's aktiivne FrontendLinks objekt
+     *      $link = $this->objFrontendLink ?? null;
+     *      if (!$link) {
+     *          return null;
+     *      }
+     *
+     *      // 1) grouped_id == menu_content_id (sinu uue teadmise järgi)
+     *      $menuContentId = (int)($link->GroupedId ?? 0);
+     *      if ($menuContentId > 0) {
+     *          return $menuContentId;
+     *      }
+     *
+     *      // 2) fallback: detailis linked_id == news.id -> loe news.menu_content_id
+     *      $newsId = (int)($link->LinkedId ?? 0);
+     *      if ($newsId > 0) {
+     *          $news = News::load($newsId);
+     *          if ($news && (int)$news->MenuContentId > 0) {
+     *              return (int)$news->MenuContentId;
+     *          }
+     *      }
+     *
+     *      return null;
+     *  }
+     *
+     *
+     * protected function Archive_Bind(): void
+     * {
+     *      // 0) Lehe kontekst: menu_content_id tuleb FrontendLinks.grouped_id'ist (või fallback news.menu_content_id)
+     *      $menuContentId = $this->resolveNewsMenuContentId();
+     *
+     *      if (!$menuContentId) {
+     *          $this->tblYearSidebar->ActiveYear = null;
+     *          $this->tblArchiveList->DataSource = [];
+     *          return;
+     *      }
+     *
+     *      // 1) Uuri mark
+     *      $settings = NewsSettings::querySingle(
+     *          QQ::equal(QQN::NewsSettings()->MenuContentId, (int)$menuContentId)
+     *      );
+     *      $mark = $settings ? (int)$settings->Mark : 0;
+     *
+     *      // 2) Aktiivne aasta allikas: URL -> sidebar Ajax -> muidu leia max year
+     *      $yearFromUrl = isset($_GET['year']) ? (int)$_GET['year'] : null;
+     *      $yearFromSidebar = $this->tblYearSidebar->Year;
+     *      $activeYear = $yearFromUrl ?: $yearFromSidebar;
+     *
+     *      // 3) Baas-tingimus (täpselt nagu sul oli)
+     *      $condition = QQ::all();
+     *
+     *      if ($mark === 0) {
+     *          $condition = QQ::andCondition(
+     *              $condition,
+     *              QQ::equal(QQN::News()->MenuContentId, (int)$menuContentId)
+     *          );
+     *      }
+     *
+     *      // Kui activeYear puudub, leia see andmete järgi (uusim Year)
+     *      if (!$activeYear) {
+     *          $latest = News::querySingle(
+     *              $condition,
+     *              [
+     *                  QQ::orderBy(QQN::News()->Year, false) // DESC
+     *              ]
+     *          );
+     *          $activeYear = $latest ? (int)$latest->Year: null;
+     *      }
+     *
+     *      if (!$activeYear) {
+     *          $this->tblYearSidebar->ActiveYear = null;
+     *          $this->tblArchiveList->DataSource = [];
+     *          return;
+     *      }
+     *
+     *      // 4) Sea sidebar aktiivseks
+     *      $this->tblYearSidebar->ActiveYear = (int)$activeYear;
+     *
+     *      // 5) Lisa aasta filter
+     *      $condition = QQ::andCondition(
+     *          $condition,
+     *              QQ::equal(QQN::News()->Year, (int)$activeYear)
+     *      );
+     *
+     *      // 6) Lõplik DataSource listile
+     *      $this->tblArchiveList->DataSource = News::queryArray(
+     *          $condition,
+     *          [
+     *              QQ::orderBy(QQN::News()->PostDate, false),
+     *          ]
+     *      );
+     * }
+     *
+     *
+     * protected function Years_Bind(): void
+     * {
+     *      $menuContentId = $this->resolveNewsMenuContentId();
+     *
+     *      if (!$menuContentId) {
+     *          $this->tblYearSidebar->DataSource = [];
+     *          return;
+     *      }
+     *
+     *      $settings = NewsSettings::querySingle(
+     *          QQ::equal(QQN::NewsSettings()->MenuContentId, (int)$menuContentId)
+     *      );
+     *      $mark = $settings ? (int)$settings->Mark : 0;
+     *
+     *      $subSql = 'SELECT DISTINCT `year` FROM `news`';
+     *      if ($mark === 0) {
+     *          $subSql .= ' WHERE `menu_content_id` = ' . (int)$menuContentId;
+     *      }
+     *
+     *      $this->tblYearSidebar->DataSource = Years::queryArray(
+     *          QQ::in(QQN::Years()->Year, QQ::subSql($subSql)),
+     *          [
+     *              QQ::groupBy(QQN::Years()->Year),
+     *              QQ::orderBy(QQN::Years()->Year, false)
+     *          ]
+     *      );
+     * }
+     *
+     */

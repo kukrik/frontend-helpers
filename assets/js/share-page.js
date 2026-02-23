@@ -6,6 +6,78 @@
         try { return JSON.parse(raw); } catch (e) { return {}; }
     }
 
+    // --- i18n (short + optional fetch) ---
+    var i18nCache = Object.create(null);
+
+    function merge(a, b) {
+        var out = {};
+        var k;
+        if (a) for (k in a) out[k] = a[k];
+        if (b) for (k in b) out[k] = b[k];
+        return out;
+    }
+
+    function normalizeLang(lang) {
+        if (!lang) return '';
+        return String(lang).toLowerCase();
+    }
+
+    function getDefaultTranslations() {
+        return {
+            share_mail_subject_default: 'Check out this link',
+            share_copy_success: 'Link copied',
+            share_copy_fail: 'Copy failed',
+            share_bookmark_hint: 'To bookmark this page, use'
+        };
+    }
+
+    function getBrowserLang() {
+        return normalizeLang((document.documentElement && document.documentElement.lang) || navigator.language || 'et');
+    }
+
+    function loadTranslationsFromUrl(url, lang) {
+        if (!url || !lang) return Promise.resolve(null);
+        if (i18nCache[lang]) return i18nCache[lang];
+
+        i18nCache[lang] = fetch(url, { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .catch(function () { return null; });
+
+        return i18nCache[lang];
+    }
+
+    function createTranslator(cfg) {
+        var defaults = getDefaultTranslations();
+        var lang = normalizeLang(cfg.language) || getBrowserLang();
+        var dict = merge(defaults, cfg.translations);
+
+        // Optional async load from JSON file
+        if (!cfg.translations && cfg.langPath) {
+            var url = String(cfg.langPath).replace(/\/$/, '') + '/' + lang + '.json';
+            loadTranslationsFromUrl(url, lang).then(function (remote) {
+                if (remote && typeof remote === 'object') {
+                    var remoteDict = remote;
+
+                    // We support both formats:
+                    // 1) { "share_copy_success": "...", ... }
+                    // 2) { "language": "et", "translations": { ... } }
+                    if (remote.translations && typeof remote.translations === 'object') {
+                        remoteDict = remote.translations;
+                    }
+
+                    dict = merge(dict, remoteDict);
+                }
+            });
+        }
+
+        function t(key) {
+            return (dict && dict[key]) ? String(dict[key]) : String(defaults[key] || key);
+        }
+
+        return { t: t, lang: lang };
+    }
+
+
     function metaContent(selector) {
         var el = document.querySelector(selector);
         return el ? (el.getAttribute('content') || '').trim() : '';
@@ -152,8 +224,19 @@
 
             toastDurationMs: 2200,
 
-            xTextSource: 'title' // 'title' | 'text'
+            xTextSource: 'title', // 'title' | 'text'
+
+            // i18n:
+            // language: 'et' | 'en' | ...
+            // translations: { share_copy_success: '...', ... }  (optional)
+            // langPath: '/assets/lang' (optional; fetches /assets/lang/{language}.json)
+            language: null,
+            translations: null,
+            langPath: null
         }, datasetOptions, options || {});
+
+        var i18n = createTranslator(cfg);
+        var t = i18n.t;
 
         root.addEventListener('click', async function (e) {
             var data = getShareData();
@@ -191,7 +274,7 @@
                     }
                 }
 
-                var subject = data.title || 'Vaata seda linki';
+                var subject = data.title || t('share_mail_subject_default');
                 var body = (data.text ? data.text + '\n\n' : '') + data.url;
                 window.location.href = buildMailtoUrl(subject, body);
                 return;
@@ -202,7 +285,7 @@
                 e.preventDefault();
                 var ok = await copyToClipboard(data.url);
                 toast(
-                    ok ? 'Link kopeeritud' : 'Kopeerimine ei õnnestunud',
+                    ok ? t('share_copy_success') : t('share_copy_fail'),
                     ok ? 'success' : 'error',
                     cfg.toastDurationMs
                 );
@@ -220,7 +303,7 @@
             if (btnBookmark && cfg.enableBookmark) {
                 e.preventDefault();
                 toast(
-                    'Järjehoidja lisamiseks kasuta: ' + (isMacLike() ? 'Cmd + D' : 'Ctrl + D'),
+                    t('share_bookmark_hint') + ': ' + (isMacLike() ? 'Cmd + D' : 'Ctrl + D'),
                     'info',
                     3000
                 );
