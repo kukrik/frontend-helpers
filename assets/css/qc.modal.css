@@ -7,9 +7,41 @@
     max-width: 100%;
 }
 
-.modal.modal--sm { width: min(520px, calc(100vw - 2rem)); }
-.modal.modal--md { width: min(760px, calc(100vw - 2rem)); }
-.modal.modal--lg { width: min(1040px, calc(100vw - 2rem)); }
+.modal.modal-sm { width: min(520px, calc(100vw - 2rem)); }
+.modal.modal-md { width: min(760px, calc(100vw - 2rem)); }
+.modal.modal-lg { width: min(1040px, calc(100vw - 2rem)); }
+
+/* AUTO = according to content (but does not run off the screen) */
+.modal.modal-auto {
+    width: fit-content;
+    max-width: calc(100vw - 2rem);
+}
+
+/* --- Fullscreen on mobile (with opt-in class) --- */
+@media (max-width: var(--qc-modal-fs-max, 576px)) {
+    .modal.modal-fullscreen {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+
+        left: 0;
+        top: 0;
+        transform: none;
+        margin: 0;
+    }
+
+    .modal.modal-fullscreen .modal-surface {
+        border-radius: 0;
+        height: 100vh;
+        max-height: 100vh;
+    }
+
+    /* let the body take up the remaining space (header/footer stay in place) */
+    .modal.modal-fullscreen .modal-body {
+        flex: 1;
+    }
+}
 
 .modal::backdrop {
     background: rgba(0, 0, 0, 0.45);
@@ -19,7 +51,55 @@
     background: transparent;
 }
 
-.modal__surface {
+/* =========================================
+   Positioning API
+   - default: top (more convenient for admin/UI)
+   - uses CSS variables for offset
+   ========================================= */
+
+/* Common base: fixed and horizontally centered */
+.modal[open] {
+    position: fixed;
+    left: 50%;
+    margin: 0;
+}
+
+/* TOP (default) */
+.modal-pos-top[open],
+.modal:not([class*="modal-pos-"])[open] {
+    top: var(--qc-modal-top, 2rem);
+    bottom: auto;
+    transform: translateX(-50%);
+}
+
+/* CENTER */
+.modal-pos-center[open] {
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+}
+
+/* BOTTOM */
+.modal-pos-bottom[open] {
+    top: auto;
+    bottom: var(--qc-modal-bottom, 2rem);
+    transform: translateX(-50%);
+}
+
+/* Slightly up on low screens (optional) */
+@media (max-height: 500px) {
+    .modal-pos-top[open],
+    .modal:not([class*="modal-pos-"])[open] {
+        top: var(--qc-modal-top, 1rem);
+    }
+    .modal-pos-bottom[open] {
+        bottom: var(--qc-modal-bottom, 1rem);
+    }
+}
+
+/* //////////////////////////////// */
+
+.modal-surface {
     margin: 0;
     padding: 0;
     background: #fff;
@@ -31,32 +111,37 @@
     max-height: calc(100vh - 2rem);
 }
 
-.modal__header {
+/* Flexbox robustness for scrollable body (especially in nested flex contexts) */
+.modal-header { flex: 0 0 auto; }
+.modal-body   { flex: 1 1 auto; min-height: 0; }
+.modal-footer { flex: 0 0 auto; }
+
+.modal-header {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 1rem;
 
-    padding: 1rem 1.25rem;
+    padding: 0.3rem 1.25rem;
     border-bottom: 1px solid #e5e7eb;
 
-    /* default: valge header */
+    /* default: white header */
     background: #fff;
     color: #111827;
 }
 
-/* Kui title puudub, peida header */
-.modal:not(.has-title) .modal__header {
+/* If there is no title and no close button, hide the header */
+.modal:not(.has-title):not(.has-close-button) .modal-header {
     display: none;
 }
 
-.modal__title {
+.modal-title {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
 }
 
-.modal__close {
+.modal-close {
     appearance: none;
     border: 0;
     background: transparent;
@@ -72,81 +157,81 @@
     opacity: 0.7;
 }
 
-.modal__close:hover {
-    background: rgba(0, 0, 0, 0.06);
+.modal-close:hover {
+   /* background: rgba(0, 0, 0, 0.06);*/
     opacity: 1;
 }
 
-.modal__body {
+.modal-body {
     padding: 1.25rem;
     overflow: auto;
 }
 
 /* =========================================================
-   Header themes (kasuta PHP-s: $dlg->HeaderClass = 'is-success'; jne)
+   Header themes (use in PHP: $dlg->HeaderClass = 'is-success'; etc.)
    ========================================================= */
 
 /* Primary */
-.modal__header.is-primary {
+.modal-header.is-primary {
     background: #0d6efd;
     border-bottom-color: rgba(255, 255, 255, 0.25);
     color: #fff;
 }
-.modal__header.is-primary .modal__close:hover {
+.modal-header.is-primary .modal-close:hover {
     background: rgba(255, 255, 255, 0.15);
 }
 
 /* Success */
-.modal__header.is-success {
+.modal-header.is-success {
     background: #198754;
     border-bottom-color: rgba(255, 255, 255, 0.25);
     color: #fff;
 }
-.modal__header.is-success .modal__close:hover {
-    background: rgba(255, 255, 255, 0.15);
+.modal-header.is-success .modal-close:hover {
+    /*background: rgba(255, 255, 255, 0.15);*/
 }
 
 /* Warning */
-.modal__header.is-warning {
+.modal-header.is-warning {
     background: #ffc107;
     border-bottom-color: rgba(0, 0, 0, 0.12);
     color: #111827;
 }
-.modal__header.is-warning .modal__close:hover {
+.modal-header.is-warning .modal-close:hover {
     background: rgba(0, 0, 0, 0.08);
 }
 
 /* Danger */
-.modal__header.is-danger {
+.modal-header.is-danger {
     background: #dc3545;
     border-bottom-color: rgba(255, 255, 255, 0.25);
     color: #fff;
 }
-.modal__header.is-danger .modal__close:hover {
+.modal-header.is-danger .modal-close:hover {
     background: rgba(255, 255, 255, 0.15);
 }
 
 /* Info */
-.modal__header.is-info {
+.modal-header.is-info {
     background: #0dcaf0;
     border-bottom-color: rgba(0, 0, 0, 0.12);
-    color: #111827;
+    color: #ffffff;
 }
-.modal__header.is-info .modal__close:hover {
+.modal-header.is-info .modal-close:hover {
     background: rgba(0, 0, 0, 0.08);
 }
 
 /* Dark */
-.modal__header.is-dark {
+.modal-header.is-dark {
     background: #212529;
     border-bottom-color: rgba(255, 255, 255, 0.18);
     color: #fff;
 }
-.modal__header.is-dark .modal__close:hover {
+.modal-header.is-dark .modal-close:hover {
     background: rgba(255, 255, 255, 0.12);
 }
 
-.modal__footer {
+.modal-footer {
     display: flex;
     gap: 0.5rem;
 
@@ -155,19 +240,22 @@
     background: #fff;
 }
 
-.modal__footer--right {
+/* Utility: push subsequent footer items to the right */
+.modal-footer .modal-footer-spacer { margin-left: auto; }
+
+.modal-footer-right {
     justify-content: flex-end;
 }
 
-.modal__footer--left {
+.modal-footer-left {
     justify-content: flex-start;
 }
 
-.modal__footer--raw {
+.modal-footer-raw {
     justify-content: flex-start;
 }
 
-.modal__btn {
+.modal-btn {
     border: 1px solid rgba(0,0,0,.2);
     background: #fff;
     padding: 0.5rem 0.85rem;
@@ -175,11 +263,11 @@
     cursor: pointer;
 }
 
-.modal__btn--secondary {
+.modal-btn-secondary {
     background: #f8f9fa;
 }
 
-.modal__btn--primary {
+.modal-btn-primary {
     background: #0d6efd;
     border-color: #0d6efd;
     color: #fff;

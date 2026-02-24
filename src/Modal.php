@@ -1,6 +1,6 @@
 <?php
 
-    declare(strict_types = 1);
+    declare(strict_types=1);
 
     namespace QCubed\Plugin;
 
@@ -11,17 +11,29 @@
     use QCubed\Exception\Caller;
     use QCubed\Exception\InvalidCast;
     use QCubed\Project\Application;
+    use QCubed\Project\Control\Button;
 
     /**
      * Represents a modal dialog control that extends the Panel control functionality.
      * Provides methods for displaying, hiding, and dynamically setting modal properties.
      *
-     * @property string $Title The title of the dialog box.
+     * @property string|null $Title The title of the dialog box.
      * @property bool $HasCloseButton Whether to show the close button in the header. Default is true.
      * @property bool $CloseOnEscape Whether to close the dialog box when the user presses the Escape key. Default is true.
-     * @property mixed $Backdrop Whether to show a backdrop behind the dialog box. Default is true.
-     * @property string $HeaderClass CSS class for a header (eg "is-primary"). Default null = white header.
-     * @property string $HeaderClasses CSS class for a header (eg "is-primary"). Default null = white header.
+     * @property mixed $Backdrop Whether to show a backdrop behind the dialog box. Default is true. (true|false|"static")
+     *
+     * @property string $Placement Placement: top|center|bottom. Default top.
+     * @property string $Offset Vertical offset for top/bottom placement (e.g. "2rem", "24px", "10vh").
+     *
+     * @property string $Size Modal size: sm|md|lg|auto. Default md.
+     * @property bool $FullscreenOnMobile Whether the modal becomes fullscreen on small screens.
+     * @property string $FullscreenMaxWidth Breakpoint for fullscreen behavior (e.g. "576px").
+     *
+     * @property string|null $HeaderClass CSS class for a header (alias: HeaderClasses).
+     * @property string|null $HeaderClasses CSS class for a header (alias of HeaderClass).
+     *
+     * @property string|null $FooterHtml Optional HTML for a footer.
+     * @property bool $FooterHtmlIsRaw If false, FooterHtml will be escaped (rendered as text). Default true.
      *
      * @package QCubed\Plugin
      */
@@ -29,24 +41,49 @@
     {
         protected bool $blnAutoRender = true;
 
-        public const string SIZE_SM = 'sm';
-        public const string SIZE_MD = 'md';
-        public const string SIZE_LG = 'lg';
+        public const SIZE_SM = 'sm';
+        public const SIZE_MD = 'md';
+        public const SIZE_LG = 'lg';
+        public const SIZE_AUTO = 'auto';
 
-        public const string HEADER_THEME_NONE = 'none';
-        public const string HEADER_THEME_PRIMARY = 'primary';
-        public const string HEADER_THEME_SUCCESS = 'success';
-        public const string HEADER_THEME_WARNING = 'warning';
-        public const string HEADER_THEME_DANGER = 'danger';
-        public const string HEADER_THEME_INFO = 'info';
-        public const string HEADER_THEME_DARK = 'dark';
+        /** Placement: top|center|bottom. Default: top. */
+        public const PLACEMENT_TOP = 'top';
+        public const PLACEMENT_CENTER = 'center';
+        public const PLACEMENT_BOTTOM = 'bottom';
+
+        public const HEADER_THEME_NONE = 'none';
+        public const HEADER_THEME_PRIMARY = 'primary';
+        public const HEADER_THEME_SUCCESS = 'success';
+        public const HEADER_THEME_WARNING = 'warning';
+        public const HEADER_THEME_DANGER = 'danger';
+        public const HEADER_THEME_INFO = 'info';
+        public const HEADER_THEME_DARK = 'dark';
 
         protected ?string $strTitle = null;
         protected bool $blnHasCloseButton = true;
         protected bool $blnCloseOnEscape = true;
         protected mixed $mixBackdrop = true;
 
+        /** Where to show modal vertically. */
+        protected string $strPlacement = self::PLACEMENT_BOTTOM;
+
+        /**
+         * Vertical offset for top/bottom placement.
+         * Examples: "2rem", "24px", "10vh".
+         */
+        protected string $strOffset = '2rem';
+
+        /** Modal size: sm|md|lg|auto. Default md. */
         protected string $strSize = self::SIZE_MD;
+
+        /** If true, render a class that turns modal fullscreen on small screens (CSS breakpoint). */
+        protected bool $blnFullscreenOnMobile = true;
+
+        /**
+         * Breakpoint for fullscreen CSS. Example: "576px".
+         * NOTE: we output this as CSS var so a project can tweak per modal.
+         */
+        protected string $strFullscreenMaxWidth = '576px';
 
         /** CSS class for a header (eg "is-primary"). Default null = white header. */
         protected ?string $strHeaderClass = null;
@@ -57,37 +94,34 @@
         /** Footer container to host QCubed controls (buttons, etc.). */
         protected Panel $pnlFooter;
 
-        /** Optional raw HTML inside footer (before controls). */
+        /** Optional HTML inside footer (before controls). */
         protected ?string $strFooterHtml = null;
+
+        /** If true, FooterHtml is treated as raw HTML. If false, it will be escaped. */
+        protected bool $blnFooterHtmlIsRaw = true;
 
         /** Load CSS/JS only once (multiple modals on the page). */
         protected static bool $blnAssetsRegistered = false;
 
         /**
-         * Initializes a new instance of the control with the specified parent object and optional control ID.
-         *
-         * @param ControlBase|FormBase $objParentObject The parent control or form that owns this control.
-         * @param string|null $strControlId An optional ID to assign to the control. If null, an ID will be generated
-         *     automatically.
-         *
-         * @return void
+         * @param ControlBase|FormBase $objParentObject
+         * @param string|null $strControlId
          * @throws Caller
          */
         public function __construct(ControlBase|FormBase $objParentObject, ?string $strControlId = null)
         {
             parent::__construct($objParentObject, $strControlId);
 
-            $this->pnlFooter = new Panel($this, $this->ControlId . '_footer');
+            $this->UseWrapper = false;
+
+            $this->pnlFooter = new Panel($this);
+            $this->pnlFooter->UseWrapper = false;
 
             $this->applyFooterAlignmentCss();
-
             $this->registerFiles();
         }
 
         /**
-         * Registers the required CSS and JavaScript files for the modal functionality.
-         *
-         * @return void
          * @throws Caller
          */
         protected function registerFiles(): void
@@ -97,8 +131,8 @@
             }
             self::$blnAssetsRegistered = true;
 
-            $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/css/qc.modal.css");
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/qc.modal.js");
+            $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . '/css/qc.modal.css');
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . '/js/qc.modal.js');
         }
 
         /**
@@ -120,28 +154,20 @@
         }
 
         /**
-         * Applies CSS classes to align the footer based on the specified alignment setting.
-         *
          * @return void
          */
         protected function applyFooterAlignmentCss(): void
         {
-            $this->pnlFooter->removeCssClass('modal__footer--left');
-            $this->pnlFooter->removeCssClass('modal__footer--right');
-
-            $this->pnlFooter->addCssClass('modal__footer');
-            $this->pnlFooter->addCssClass(
-                $this->strFooterAlignment === 'left'
-                    ? 'modal__footer--left'
-                    : 'modal__footer--right'
-            );
+            // NOTE:
+            // pnlFooter is a technical (non-rendered) container to host QCubed controls.
+            // Footer wrapper (with alignment classes) is rendered directly in getControlHtml().
+            // This method is intentionally left as a no-op for backward compatibility.
         }
 
         /**
          * Create a footer button and return it so the developer can attach QCubed actions.
          *
-         * @param string|null $cssClass Optional extra CSS class(es) for the button (project-specific).
-         *
+         * @param array $htmlAttributes Optional extra HTML attributes
          * @throws Caller
          */
         public function addFooterButton(
@@ -168,11 +194,9 @@
                 );
             }
 
-            // “Uniform” button styling for our modal (you control the CSS)
-            $btn->addCssClass('modal__btn');
-            $btn->addCssClass($isPrimary ? 'modal__btn--primary' : 'modal__btn--secondary');
+            $btn->addCssClass('modal-btn');
+            $btn->addCssClass($isPrimary ? 'modal-btn-primary' : 'modal-btn-secondary');
 
-            // Developer project-specific class (could be btn btn-orange etc.)
             if ($cssClass) {
                 $btn->addCssClass($cssClass);
             }
@@ -187,25 +211,46 @@
         public function addCloseFooterButton(
             string $text = 'Cancel',
             ?string $controlId = null,
-            ?string $cssClass = null
+            ?string $cssClass = null,
+            bool $autofocus = false,
+            array $htmlAttributes = []
         ): Button {
+            $attrs = array_merge(
+                [
+                    'type' => 'button',
+                    'data-modal-close' => '1',
+                ],
+                $htmlAttributes
+            );
+
+            if ($autofocus) {
+                $attrs['autofocus'] = 'autofocus';
+            }
             return $this->addFooterButton(
                 $text,
                 $controlId,
                 false,
                 false,
                 null,
-                [
-                    'type' => 'button',
-                    'data-modal-close' => '1',
-                ],
+                $attrs,
                 $cssClass
             );
         }
 
         /**
-         * Displays the dialog box by making it visible and executing the associated control command to open it.
-         *
+         * Set footer HTML content.
+         * By default, $isRaw = true keeps backwards compatibility (treats provided string as raw HTML).
+         * Set $isRaw = false to escape the string and render it as text.
+         */
+        public function setFooterHtml(?string $html, bool $isRaw = true): static
+        {
+            $this->strFooterHtml = $html;
+            $this->blnFooterHtmlIsRaw = $isRaw;
+            $this->blnModified = true;
+            return $this;
+        }
+
+        /**
          * @return void
          */
         public function showDialogBox(): void
@@ -219,12 +264,9 @@
                 'open',
                 ApplicationBase::PRIORITY_LOW
             );
-
         }
 
         /**
-         * Closes the dialog box associated with the current control.
-         *
          * @return void
          */
         public function hideDialogBox(): void
@@ -238,9 +280,10 @@
         }
 
         /**
-         * Retrieves the jQuery setup function name associated with the modal functionality.
+         * Return the name of the JavaScript setup function that should get called on this control's HTML object. Returning
+         * a value triggers the other jquery widget support.
          *
-         * @return string The name of the jQuery setup function.
+         * @return string
          */
         protected function getJqSetupFunction(): string
         {
@@ -248,9 +291,7 @@
         }
 
         /**
-         * Initializes a jQuery widget for the current control with the specified options.
-         *
-         * @return void
+         * Attaches the JQueryUI widget to the HTML object if a widget is specified.
          */
         protected function makeJqWidget(): void
         {
@@ -259,6 +300,8 @@
                 'hasCloseButton' => $this->blnHasCloseButton,
                 'closeOnEscape' => $this->blnCloseOnEscape,
                 'backdrop' => $this->mixBackdrop,
+                'size' => $this->strSize,
+                'headerClass' => $this->strHeaderClass,
             ];
 
             Application::executeControlCommand(
@@ -270,10 +313,6 @@
         }
 
         /**
-         * Generates and returns the HTML markup for the control, including the dialog structure,
-         * title, body content, and optional close button.
-         *
-         * @return string The generated HTML markup for the control.
          * @throws Caller
          */
         public function getControlHtml(): string
@@ -283,73 +322,123 @@
 
             $bodyHtml = $this->Text;
 
+            // Auto-render direct child controls (except the technical footer panel) inside the modal body
+            $bodyChildrenHtml = '';
+            if ($this->AutoRenderChildren) {
+                foreach ($this->getChildControls() as $child) {
+                    if ($child === $this->pnlFooter) {
+                        continue;
+                    }
+                    $bodyChildrenHtml .= $child->render(false);
+                }
+            }
+
             $closeBtn = '';
             if ($this->blnHasCloseButton) {
-                $closeBtn = '<button type="button" class="modal__close" data-modal-close="1" aria-label="Close">×</button>';
+                $closeBtn = '<button type="button" class="modal-close" data-modal-close="1" aria-label="Close">×</button>';
             }
 
             $titleHtml = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $hasTitleClass = $hasTitle ? ' has-title' : '';
+            $hasCloseClass = $this->blnHasCloseButton ? ' has-close-button' : '';
 
-            $sizeClass = ' modal--' . htmlspecialchars($this->strSize, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $headerClass = $this->strHeaderClass ? ' ' . htmlspecialchars($this->strHeaderClass, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
+            // Accessibility: if there is no visible title, use aria-label instead of aria-labelledby.
+            $ariaAttr = $hasTitle
+                ? ' aria-labelledby="' . $this->ControlId . '-title"'
+                : ' aria-label="Dialog"';
 
-            $footerControlsHtml = $this->pnlFooter->getChildControls()
-                ? $this->pnlFooter->render(false)
+            $sizeClass = ' modal-' . htmlspecialchars($this->strSize, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $headerClass = $this->strHeaderClass
+                ? ' ' . htmlspecialchars($this->strHeaderClass, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
                 : '';
 
-            $footerRawHtml = $this->strFooterHtml ?? '';
+            $placementClass = match ($this->strPlacement) {
+                self::PLACEMENT_CENTER => ' modal-pos-center',
+                self::PLACEMENT_BOTTOM => ' modal-pos-bottom',
+                default => ' modal-pos-top',
+            };
+
+            $fullscreenClass = $this->blnFullscreenOnMobile ? ' modal-fullscreen' : '';
+
+            $styleParts = [];
+
+            $offset = trim($this->strOffset);
+            if ($offset !== '') {
+                $safeOffset = htmlspecialchars($offset, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                if ($this->strPlacement === self::PLACEMENT_BOTTOM) {
+                    $styleParts[] = '--qc-modal-bottom: ' . $safeOffset;
+                } elseif ($this->strPlacement === self::PLACEMENT_TOP) {
+                    $styleParts[] = '--qc-modal-top: ' . $safeOffset;
+                }
+            }
+
+            if ($this->blnFullscreenOnMobile && trim($this->strFullscreenMaxWidth) !== '') {
+                $styleParts[] = '--qc-modal-fs-max: ' .
+                    htmlspecialchars($this->strFullscreenMaxWidth, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            }
+
+            $styleAttr = $styleParts ? ' style="' . implode('; ', $styleParts) . ';"' : '';
+
+            // Header (render only when needed)
+            $headerHtml = '';
+            if ($hasTitle || $this->blnHasCloseButton) {
+                $headerHtml = '<header class="modal-header' . $headerClass . '">' .
+                    ($hasTitle ? '<h2 id="' . $this->ControlId . '-title" class="modal-title">' . $titleHtml . '</h2>' : '') .
+                    $closeBtn .
+                    '</header>';
+            }
+
+            // Footer HTML (raw/escaped) + footer controls (children only)
+            $footerContent = $this->strFooterHtml ?? '';
+            if ($footerContent !== '' && !$this->blnFooterHtmlIsRaw) {
+                $footerContent = htmlspecialchars($footerContent, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            }
+
+            $footerControlsHtml = $this->pnlFooter->getChildControls()
+                ? $this->pnlFooter->renderChildren(false)
+                : '';
 
             $footerHtml = '';
-            if ($footerRawHtml !== '' || $footerControlsHtml !== '') {
-                $footerHtml = ($footerRawHtml !== '' ? '<div class="modal__footer modal__footer--raw">' . $footerRawHtml . '</div>' : '') .
-                    $footerControlsHtml;
+            if ($footerContent !== '' || $footerControlsHtml !== '') {
+                $alignClass = ($this->strFooterAlignment === 'left') ? 'modal-footer-left' : 'modal-footer-right';
+                $footerHtml = '<footer class="modal-footer ' . $alignClass . '">' . $footerContent . $footerControlsHtml . '</footer>';
             }
 
             return sprintf(
-                '<dialog id="%s" class="modal%s%s" aria-labelledby="%s-title">' .
-                '<div class="modal__surface">' .
-                '<header class="modal__header%s">' .
-                '<h2 id="%s-title" class="modal__title">%s</h2>' .
+                '<dialog id="%s" class="modal%s%s%s%s%s"%s%s>' .
+                '<div class="modal-surface">' .
                 '%s' .
-                '</header>' .
-                '<div class="modal__body">%s</div>' .
+                '<div class="modal-body">%s</div>' .
                 '%s' .
                 '</div>' .
                 '</dialog>',
                 $this->ControlId,
                 $hasTitleClass,
+                $hasCloseClass,
                 $sizeClass,
-                $this->ControlId,
-                $headerClass,
-                $this->ControlId,
-                $titleHtml,
-                $closeBtn,
-                $bodyHtml,
+                $placementClass,
+                $fullscreenClass,
+                $ariaAttr,
+                $styleAttr,
+                $headerHtml,
+                $bodyHtml . $bodyChildrenHtml,
                 $footerHtml
             );
         }
 
         /**
-         * Sets the CSS class for the header of the current control.
+         * @param null|string $class
          *
-         * @param string|null $class The CSS class (eg "is-success") to be applied to the header. Pass null to remove the class.
-         *
-         * @return static Returns the current instance for method chaining.
+         * @return $this
          */
         public function setHeaderClass(?string $class): static
         {
-            $this->HeaderClass = $class;
+            $this->HeaderClass = $class; // magic __set handles it
             return $this;
         }
 
         /**
-         * Sets the theme for the header of the modal.
-         *
-         * @param string $theme The header theme. Must be one of the Modal::HEADER_THEME_* constants.
-         *
-         * @return static Returns the current instance for method chaining.
-         * @throws InvalidCast If an invalid theme is provided.
+         * @throws InvalidCast
          */
         public function setHeaderTheme(string $theme): static
         {
@@ -373,18 +462,7 @@
             return $this;
         }
 
-
         /**
-         * Sets the value of a given property dynamically.
-         *
-         * This method allows setting specific properties of the object such as
-         * 'Title', 'HasCloseButton', 'CloseOnEscape', and 'Backdrop'. For unsupported
-         * properties, it delegates the handling to the parent class implementation.
-         *
-         * @param string $strName The name of the property to set.
-         * @param mixed $mixValue The value to assign to the property.
-         *
-         * @return void
          * @throws Caller
          * @throws InvalidCast
          */
@@ -412,12 +490,36 @@
                     $this->blnModified = true;
                     break;
 
+                case 'Placement':
+                    $placement = strtolower(trim((string)$mixValue));
+                    if (!in_array($placement, [self::PLACEMENT_TOP, self::PLACEMENT_CENTER, self::PLACEMENT_BOTTOM], true)) {
+                        throw new InvalidCast("Invalid Placement. Use 'top', 'center' or 'bottom'.");
+                    }
+                    $this->strPlacement = $placement;
+                    $this->blnModified = true;
+                    break;
+
+                case 'Offset':
+                    $this->strOffset = trim((string)$mixValue);
+                    $this->blnModified = true;
+                    break;
+
                 case 'Size':
-                    $size = (string)$mixValue;
-                    if (!in_array($size, [self::SIZE_SM, self::SIZE_MD, self::SIZE_LG], true)) {
-                        throw new InvalidCast('Invalid Size. Use Modal::SIZE_SM, SIZE_MD or SIZE_LG.');
+                    $size = strtolower(trim((string)$mixValue));
+                    if (!in_array($size, [self::SIZE_SM, self::SIZE_MD, self::SIZE_LG, self::SIZE_AUTO], true)) {
+                        throw new InvalidCast('Invalid Size. Use Modal::SIZE_SM, SIZE_MD, SIZE_LG or SIZE_AUTO.');
                     }
                     $this->strSize = $size;
+                    $this->blnModified = true;
+                    break;
+
+                case 'FullscreenOnMobile':
+                    $this->blnFullscreenOnMobile = (bool)$mixValue;
+                    $this->blnModified = true;
+                    break;
+
+                case 'FullscreenMaxWidth':
+                    $this->strFullscreenMaxWidth = trim((string)$mixValue);
                     $this->blnModified = true;
                     break;
 
@@ -432,18 +534,17 @@
                     $this->blnModified = true;
                     break;
 
+                case 'FooterHtmlIsRaw':
+                    $this->blnFooterHtmlIsRaw = (bool)$mixValue;
+                    $this->blnModified = true;
+                    break;
+
                 default:
                     parent::__set($strName, $mixValue);
             }
         }
 
         /**
-         * Retrieves the value of a property based on the given property name.
-         *
-         * @param string $strName The name of the property to retrieve.
-         *
-         * @return mixed The value of the requested property, or the result from the parent::__get() method if the
-         *     property is not found.
          * @throws Caller
          */
         public function __get(string $strName): mixed
@@ -453,9 +554,18 @@
                 'HasCloseButton' => $this->blnHasCloseButton,
                 'CloseOnEscape' => $this->blnCloseOnEscape,
                 'Backdrop' => $this->mixBackdrop,
+
+                'Placement' => $this->strPlacement,
+                'Offset' => $this->strOffset,
+
                 'Size' => $this->strSize,
+                'FullscreenOnMobile' => $this->blnFullscreenOnMobile,
+                'FullscreenMaxWidth' => $this->strFullscreenMaxWidth,
+
                 'HeaderClass', 'HeaderClasses' => $this->strHeaderClass,
                 'FooterHtml' => $this->strFooterHtml,
+                'FooterHtmlIsRaw' => $this->blnFooterHtmlIsRaw,
+
                 default => parent::__get($strName),
             };
         }

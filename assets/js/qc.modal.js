@@ -1,4 +1,4 @@
-(function () {
+(function (window, document, $) {
     function getDialog(id) {
         const el = document.getElementById(id);
         if (!el || el.nodeName !== "DIALOG") return null;
@@ -8,16 +8,19 @@
     const optionsById = new Map();
 
     function applyTitle(dialog, title) {
-        const titleEl = dialog.querySelector(".modal__title");
+        const titleEl = dialog.querySelector(".modal-title");
         const t = (title || "").trim();
         if (titleEl) titleEl.textContent = t;
         dialog.classList.toggle("has-title", t.length > 0);
     }
 
     function applyHasCloseButton(dialog, hasCloseButton) {
-        const btn = dialog.querySelector(".modal__close");
+        const enabled = hasCloseButton !== false;
+        dialog.classList.toggle("has-close-button", enabled);
+
+        const btn = dialog.querySelector(".modal-close");
         if (!btn) return;
-        btn.style.display = hasCloseButton === false ? "none" : "";
+        btn.style.display = enabled ? "" : "none";
     }
 
     function applyBackdropMode(dialog, backdrop) {
@@ -27,16 +30,16 @@
     }
 
     function applySize(dialog, size) {
-        dialog.classList.remove("modal--sm", "modal--md", "modal--lg");
+        dialog.classList.remove("modal-sm", "modal-md", "modal-lg");
         if (size === "sm" || size === "md" || size === "lg") {
-            dialog.classList.add("modal--" + size);
+            dialog.classList.add("modal-" + size);
         } else {
-            dialog.classList.add("modal--md");
+            dialog.classList.add("modal-md");
         }
     }
 
     function applyHeaderClass(dialog, headerClass) {
-        const header = dialog.querySelector(".modal__header");
+        const header = dialog.querySelector(".modal-header");
         if (!header) return;
 
         const prev = header.dataset.qcModalHeaderClass;
@@ -101,6 +104,10 @@
 
                 dialog.showModal();
 
+                // Re-apply state in case options changed since initial setup
+                applyTitle(dialog, opts.title);
+                applyHasCloseButton(dialog, opts.hasCloseButton);
+
                 applyBackdropMode(dialog, opts.backdrop);
                 applySize(dialog, opts.size);
                 applyHeaderClass(dialog, opts.headerClass);
@@ -119,4 +126,16 @@
         if ("size" in opts) applySize(dialog, opts.size);
         if ("headerClass" in opts) applyHeaderClass(dialog, opts.headerClass);
     };
-})();
+
+    // ... existing code ...
+    // jQuery plugin wrapper so QCubed (and manual calls) can do: $("#id").qcModal(...)
+    if ($ && $.fn) {
+        $.fn.qcModal = function (arg2) {
+            return this.each(function () {
+                const id = this && this.id ? this.id : null;
+                if (!id) return;
+                window.qcubed.qcModal(id, arg2);
+            });
+        };
+    }
+})(window, document, window.jQuery);
