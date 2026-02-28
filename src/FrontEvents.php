@@ -18,6 +18,7 @@
 
     /**
      * Class FrontEvents
+     * @property int $EventId
      * @property string $SectionTitle
      * @property string $EmptyText
      * @property string $DateFormat
@@ -27,6 +28,7 @@
      * @property array $AllowedLocales
      * @property array $MonthLabels
      * @property bool $EnableNavigation
+     * @property bool $HighlightUpcoming
      * @property callable $NodeParamsCallback
      * @property mixed $DataSource
      *
@@ -51,11 +53,13 @@
         /** @var null|array MonthLabels */
         private ?array $arrMonthLabels = null;
         /** @var string LocalePath */
-        protected string $strLocalePath = FRONTEND_HELPERS_ASSETS_URL . "/lang";
+        protected string $strLocalePath = FRONTEND_HELPERS_ASSETS_DIR . "/lang";
         /** @var string DateFormat */
         protected string $strDateFormat = 'DD.MM.YYYY';
         /** @var bool EnableNavigation */
         protected bool $blnEnableNavigation = false;
+        /** @var bool HighlightUpcoming */
+        protected bool $blnHighlightUpcoming = false;
         /** @var  callable */
         protected mixed $nodeParamsCallback = null;
         /** @var array DataSource, from which the items are picked and rendered */
@@ -82,6 +86,8 @@
                 $objExc->incrementOffset();
                 throw $objExc;
             }
+
+            $this->UseWrapper = false;
             $this->registerFiles();
         }
 
@@ -93,8 +99,7 @@
          */
         protected function registerFiles(): void
         {
-            $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/css/......css");
-            //$this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/sidebar.js");
+            $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/css/front-events.css");
         }
 
         /**
@@ -228,7 +233,6 @@
                 $this->strLocale = $this->strDefaultLocale;
             }
 
-            // locale muutus → cache nulli
             $this->arrMonthLabels = null;
 
             return $this;
@@ -270,6 +274,17 @@
         }
 
         /**
+         * @param bool $bln
+         *
+         * @return $this
+         */
+        public function highlightUpcoming(bool $bln = true): self
+        {
+            $this->blnHighlightUpcoming = $bln;
+            return $this;
+        }
+
+        /**
          * Generates and returns the HTML for the control. It binds data, processes the data source,
          * and constructs the HTML by rendering the menu tree and wrapping it in the appropriate tag.
          *
@@ -293,7 +308,8 @@
                 }
             }
 
-            $strHtml = $this->renderEvents($this->strParams);
+            $strOut = $this->renderEvents($this->strParams);
+            $strHtml = $this->renderTag('span', null, null, $strOut);
 
             $this->objDataSource = [];
 
@@ -330,6 +346,8 @@
          * @param array $arrParams An array of parameters, where each element contains 'year' and 'status' keys.
          *
          * @return string A string containing the generated HTML for the sidebar menu.
+         * @throws \DateMalformedStringException
+         * @throws Caller
          */
         protected function renderEvents(array $arrParams): string
         {
@@ -347,6 +365,9 @@
                 return $strHtml;
             }
 
+            $today = new QDateTime(date('Y-m-d'));
+            $todayYmd = (int)$today->qFormat('YYYYMMDD');
+
             // Let's start the walkthrough
             foreach ($arrParams as $row) {
                 $intId         = (int)($row['id'] ?? 0);
@@ -361,11 +382,21 @@
                     continue;
                 }
 
+                $eventYmd = (int)$dtt->qFormat('YYYYMMDD');
+                $isUpcomingOrToday = ($eventYmd >= $todayYmd);
+
+
+                if ($this->blnHighlightUpcoming && $isUpcomingOrToday) {
+                    $upcomingClass = ' is-upcoming';
+                } else {
+                    $upcomingClass = '';
+                }
+
                 $year = $dtt->Year;
                 $day  = $dtt->qFormat('DD');
 
                 $strHtml .= _nl(_indent('<a data-id="' . $intId . '" href="' . $this->escapeString($strUrl) . '">', 1));
-                $strHtml .= _nl(_indent('<div class="event-item">', 2));
+                $strHtml .= _nl(_indent('<div class="event-item' . $upcomingClass . '">', 2));
                 $strHtml .= _nl(_indent('<div class="event-date">', 3));
                 $strHtml .= _nl(_indent('<div class="date-month">' . $this->monthLabelFromQDateTime($dtt) . '</div>', 4));
                 $strHtml .= _nl(_indent('<div class="date-day-wrapper">', 4));
@@ -421,26 +452,37 @@
         {
             $strJS = parent::getEndScript();
 
-            $EnableNavigation = $this->blnEnableNavigation;
+            $enableNavigation = $this->blnEnableNavigation ? 'true' : 'false';
+            $rootId = $this->ControlId;
 
             $strCtrlJs = <<<FUNC
 (function() {
-    var id = dataset.id
+  var root = document.getElementById("$rootId");
+  if (!root) { return; }
+
+  root.addEventListener("click", function(e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[data-id]") : null;
+    if (!a || !root.contains(a)) { return; }
+
+    var id = a.getAttribute("data-id");
     if (!id) { return; }
 
-    if (!$EnableNavigation) {
-        e.preventDefault();
-        //openModal(e.target.dataset.id); // See ei ole alati iga kliendi tellimuse puhul sama, alati ei ole tegemist ainult modaaliga,
-                                        // Tuleb valida teine tee, et vähemalt suunamine keelata
+    if (window.qcubed && typeof window.qcubed.recordControlModification === "function") {
+      window.qcubed.recordControlModification(root.id, "_EventId", id);
     }
 
-    if (window.qcubed && typeof window.qcubed.recordControlModification === "function") {
-        window.qcubed.recordControlModification(id, "_EventId", id);
+    if ($enableNavigation) {
+      return;
     }
+
+    e.preventDefault();
+
     if (window.jQuery) {
-        window.jQuery(id).trigger("selectevent");
+      window.jQuery(root).trigger("selectevent");
     }
-});
+  }, false);
+})();
+
 FUNC;
 
             Application::executeJavaScript($strCtrlJs, ApplicationBase::PRIORITY_HIGH);
@@ -609,41 +651,37 @@ FUNC;
     /**
      * EXAMPLE of using FrontEvents
      *
-     * $this->objEvents = new Q\Plugin\FrontEvents($this);
+     * $this->objEvents = new FrontEvents($this);
      * $this->objEvents->setDataBinder('Events_Bind');
      * $this->objEvents->createNodeParams([$this, 'Events_Draw']);
-     * $this->objEvents->addAction(new Q\Plugin\Event\SelectEvent(), new Q\Action\Ajax('objEvents_Click'));
+     * $this->objEvents->highlightUpcoming(true);
+     * $this->objEvents->SectionTitle = 'Tulevased sündmused';
+     * $this->objEvents->EnableNavigation = true;
+     * $this->objEvents->addAction(new SelectEvent(), new Ajax('objEvents_Click'));
      *
      * public function Events_Draw(EventsCalendar $objEvent): array
      * {
-     *      if ($objEvent->EventsChangesId) {
-     *          $changesText = $objEvent->EventsChanges
-     *      }
-     *
-     *      $a['id'] = $objEvent->Id;
+     *      $$a['id'] = $objEvent->Id;
      *      $a['url'] = $objEvent->TitleSlug;
      *      $a['native_date'] = $objEvent->BeginningEvent;
-     *      $a['time'] = $objEvent->StartTime;
+     *      $a['time'] = $objEvent->StartTime ?? '';
      *      $a['title'] = $objEvent->Title;
      *      $a['location'] = $objEvent->EventPlace;
-     *      $a['update_text'] = $changesText;
+     *      $a['update_text'] = ($objEvent->EventsChangesId && $objEvent->EventsChanges)
+     *          ? (string)$objEvent->EventsChanges->Title
+     *          : '';
      *      return $a;
      * }
      *
      * protected function Events_Bind(): void
      * {
-     *      // Lõpetamata osa:
-     *      // Järjekord:
-     *      // filtreerida ainult Status = 1 need andmed sisse...
-     *      // sorteerida BeginningEvent kasvavalt ehk DESC
-     *      //
-     *
      *      $this->objEvents->DataSource = EventsCalendar::queryArray(
-     *          QQ::all(),
-     *          [
-     *              QQ::Equal(QQN::EventsCalendar()->Status, 1),
-     *              QQ::orderBy(QQN::EventsCalendar()->BeginningEvent, false) // DESC
-     *          ]
+     *          QQ::Equal(QQN::EventsCalendar()->Status, 1),
+     *          QQ::Clause(
+     *              QQ::OrderBy(QQN::EventsCalendar()->BeginningEvent, false), // false = DESC
+     *              QQ::LimitInfo(5),
+     *              QQ::Expand(QQN::EventsCalendar()->EventsChanges)
+     *          )
      *      );
      * }
      *

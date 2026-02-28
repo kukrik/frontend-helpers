@@ -1,0 +1,106 @@
+/* EVENTS WRAPPER START */
+
+/* WRAPPER */
+.event-item {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+/* DATE BLOCK */
+.event-date {
+    width: 70px;
+    background: var(--blue-soft);
+    border-radius: 12px;
+    text-align: center;
+    padding: 8px 6px;
+    border-inline: 1px solid var(--blue-soft);
+}
+
+/* MONTH */
+.date-month {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+/* WHITE CENTER BLOCK */
+.date-day-wrapper {
+    background: #fff;
+    padding: 8px 0;
+    margin: 0 -6px; /* täidab kogu laiuse */
+}
+
+/* DAY */
+.date-day {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+}
+
+/* YEAR */
+.date-year {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--gray);
+    padding-top: 8px;
+}
+
+/* INFO */
+.event-info {
+    flex: 1;
+}
+
+.event-title {
+    /*font-size: 1rem;*/
+    font-weight: 600;
+    color: var(--gray);
+    margin: 0 0 0.25rem;
+}
+
+.event-time {
+    font-weight: 500;
+    color: var(--blue);
+    margin-bottom: 0.25rem;
+}
+
+.event-location {
+    /*font-size: .9rem;*/
+    color: var(--gray);
+}
+
+.event-change {
+    font-size: .95rem;
+    color: var(--red-text-color);
+}
+
+
+.event-item:hover .event-date {
+    background: var(--blue-hover);
+}
+
+.event-item:hover .date-month, .event-item:hover .date-year {
+    color: #fff;
+}
+
+.event-item:hover .event-title,
+.event-item:hover .event-time,
+.event-item:hover .event-location {
+    color: var(--blue-hover);
+}
+
+/* Active/upcoming date badge */
+.event-item.is-upcoming .event-date {
+    background: var(--blue-hover);
+}
+
+.event-item.is-upcoming .date-month,
+.event-item.is-upcoming .date-year {
+    color: #fff;
+}
+
+/* EVENTS WRAPPER END */
