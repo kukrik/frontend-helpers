@@ -2,24 +2,29 @@
 
     namespace QCubed\Plugin;
 
+    /**
+     *
+     */
     final class FrontendAssets
     {
         private static ?array $manifest = null;
 
-        protected string $strFrontendRootPath = FRONTEND_DIR;
-
+        /**
+         * @return array|string[]
+         */
         private static function manifest(): array
         {
             if (self::$manifest !== null) return self::$manifest;
 
-            $path = __DIR__ . '/../../frontend/assets/css/manifest.json'; // kohanda
-            if (!file_exists($path)) {
-                // fallback dev jaoks
+            $path = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/frontend/assets/css/manifest.json';
+
+            if (!is_file($path)) {
+                // dev fallback
                 return self::$manifest = [
                     'fonts' => '/frontend/assets/css/src/fonts.css',
                     'base' => '/frontend/assets/css/src/base.css',
-                    'breakpoints' => '/frontend/assets/css/src/breakpoints.css',
                     'styles' => '/frontend/assets/css/src/styles.css',
+                    'breakpoints' => '/frontend/assets/css/src/breakpoints.css',
                 ];
             }
 
@@ -33,6 +38,11 @@
             return $m[$key] ?? '';
         }
 
+        /**
+         * @param string $key
+         *
+         * @return string
+         */
         public static function cssLink(string $key): string
         {
             $href = self::css($key);
