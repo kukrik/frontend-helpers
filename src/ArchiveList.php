@@ -260,8 +260,8 @@
                     continue;
                 }
 
-                $strHtml .= _nl(_indent('<li>', 1));
-                $strHtml .= _nl(_indent('<a href="' . $strUrl . '">',2));
+                $strHtml .= '<li>';
+                $strHtml .= '<a href="' . $strUrl . '">';
                 $strHtml .= '<span class="col-date">' . $calDate . '</span>';
 
                 if (!$strChange) {
@@ -270,8 +270,8 @@
                     $strHtml .= '<span class="col-content">' . $strTitle . '<span class="col-change">' . $strChange . '</span></span>';
                 }
 
-                $strHtml .= _nl(_indent('</a>',2));
-                $strHtml .= _nl(_indent('</li>', 1));
+                $strHtml .= '</a>';
+                $strHtml .= '</li>';
             }
 
             return $strHtml;

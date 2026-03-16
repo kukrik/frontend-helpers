@@ -31,6 +31,7 @@
      * @property string $TwitterText Text for the Twitter button. The default is 'Tweet'.
      * @property string $EmailText Text for the email button. The default is 'Send it by email'.
      * @property string $PrintText Text for the print button. The default is 'Print'.
+     * @property string $AddWrapperClass Additional CSS class to add to the wrapper div.
      *
      * @package QCubed\Plugin
      */
@@ -53,6 +54,7 @@
         protected string $strTwitterText = 'Tweet';
         protected string $strEmailText = 'Send it by email';
         protected string $strPrintText = 'Print';
+        protected ?string $strAddWrapperClass = null;
 
         /**
          * Constructor for initializing the control.
@@ -77,8 +79,8 @@
          */
         protected function registerFiles(): void
         {
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . '/js/share-page.js');
-            $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . '/css/share-page.css');
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . '/js/share-page.min.js');
+            //$this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . '/css/share-page.css');
         }
 
         /**
@@ -92,7 +94,12 @@
          */
         protected function getControlHtml(): string
         {
-            $strHtml = '<div id="' . $this->ControlId . '" class="page-share" data-share-options=\'';
+            if (!$this->strAddWrapperClass) {
+                $strHtml = '<div id="' . $this->ControlId . '" class="page-share" data-share-options=\'';
+            } else {
+                $strHtml = '<div id="' . $this->ControlId . '" class="page-share ' . $this->strAddWrapperClass . '" data-share-options=\'';
+            }
+
             $strHtml .= json_encode($this->makePHPOptions(),JSON_UNESCAPED_SLASHES);
             $strHtml .= '\'>' . _nl();
             
@@ -231,6 +238,7 @@ if (window.FrontendHelpersSharePage) {
                 'TwitterText' => $this->strTwitterText,
                 'EmailText' => $this->strEmailText,
                 'PrintText' => $this->strPrintText,
+                'AddWrapperClass' => $this->strAddWrapperClass,
                 default => parent::__get($strName),
             };
         }
@@ -313,6 +321,10 @@ if (window.FrontendHelpersSharePage) {
 
                 case 'PrintText':
                     $this->strPrintText = Type::Cast($mixValue, Type::STRING);
+                    break;
+
+                case 'AddWrapperClass':
+                    $this->strAddWrapperClass = Type::Cast($mixValue, Type::STRING);
                     break;
 
                 default:

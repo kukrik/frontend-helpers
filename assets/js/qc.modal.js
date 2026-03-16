@@ -127,7 +127,6 @@
         if ("headerClass" in opts) applyHeaderClass(dialog, opts.headerClass);
     };
 
-    // ... existing code ...
     // jQuery plugin wrapper so QCubed (and manual calls) can do: $("#id").qcModal(...)
     if ($ && $.fn) {
         $.fn.qcModal = function (arg2) {

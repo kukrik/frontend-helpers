@@ -1,4 +1,3 @@
-// sidebar.js
 (function () {
     const SPEED_MS = 220;
 

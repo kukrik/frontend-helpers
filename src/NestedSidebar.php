@@ -34,7 +34,7 @@
      * @property string $WrapperClass
      * @property string $NavLabel
      * @property string $TagName
-     * * @property mixed $DataSource
+     * @property mixed $DataSource
      *
      * @package QCubed\Plugin
      */
@@ -116,7 +116,7 @@
         protected function registerFiles(): void
         {
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/css/sidebar.css");
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/sidebar.js");
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/sidebar.min.js");
         }
 
         /**

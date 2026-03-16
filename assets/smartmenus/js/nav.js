@@ -17,7 +17,7 @@ $(function() {
 
     const openBtn = document.querySelector('.mobile-nav-toggle');
     const closeBtn = document.querySelector('.mobile-nav-close');
-    const nav = document.getElementById('.mobile-nav');
+    const nav = document.querySelector('.mobile-nav');
     const backdrop = document.querySelector('.mobile-backdrop');
 
     function openNav() {
@@ -68,7 +68,7 @@ $(function() {
                 }
             });
 
-            // 2) oggle this item
+            // 2) toggle this item
             if (isOpen) {
                 li.classList.remove('is-open');
                 // if you close it, close all the subordinates too

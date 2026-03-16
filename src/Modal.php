@@ -132,7 +132,7 @@
             self::$blnAssetsRegistered = true;
 
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . '/css/qc.modal.css');
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . '/js/qc.modal.js');
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . '/js/qc.modal.min.js');
         }
 
         /**

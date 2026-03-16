@@ -5,6 +5,8 @@
     $news = $this->DataSource[0] ?? null;
     if (!$news) { return; }
 
+    $this->objSiteOptions = SiteOptions::load(1);
+
     $objContentMediaRender = new FrontendMediaRenderer($this);
     $objContentMediaRender->TempUrl = APP_UPLOADS_TEMP_URL . "/_files/thumbnail";
 
@@ -16,10 +18,10 @@
 
     if ($news->getChangesId()) {
         $objFeaturedTime = $news->getPostUpdateDate()->qFormat('YYYY-MM-DD');
-        $objFeaturedDate = $news->getPostUpdateDate()->qFormat('DD.MM.YYYY');
+        $objFeaturedDate = $news->getPostUpdateDate()->qFormat($this->objSiteOptions->DefaultDateFormatObject->Date);
     } else {
         $objFeaturedTime = $news->getPostDate()->qFormat('YYYY-MM-DD');
-        $objFeaturedDate = $news->getPostDate()->qFormat('DD.MM.YYYY');
+        $objFeaturedDate = $news->getPostDate()->qFormat($this->objSiteOptions->DefaultDateFormatObject->Date);
     }
 ?>
 

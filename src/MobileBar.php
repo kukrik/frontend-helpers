@@ -57,7 +57,7 @@
          */
         protected function registerFiles(): void
         {
-            $this->addCssFile(QCUBED_NESTEDSORTABLE_ASSETS_URL . "/smartmenus/css/nav.css");
+            //$this->addCssFile(QCUBED_NESTEDSORTABLE_ASSETS_URL . "/smartmenus/css/nav.css");
         }
 
         /**

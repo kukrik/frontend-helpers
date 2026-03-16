@@ -46,6 +46,7 @@
      * @property string $TagName
      * @property string $TagClass
      * @property boolean $MobileView
+     * @property boolean $NavItems
      *
      * @property string $DataSource
      *
@@ -75,6 +76,10 @@
         protected string $strTagClass = 'main-menu menu sm sm-core';
         /** @var bool MobileView */
         protected bool $blnMobileView = false;
+        /** @var bool NavItems */
+        protected bool $blnNavItems = false;
+
+
 
         /** @var  callable */
         protected mixed $nodeParamsCallback = null;
@@ -140,8 +145,8 @@
         {
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/css/sm-core-css");
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/css/nav.css");
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/js/jquery.smartmenus.js");
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/js/nav.js");
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/js/jquery.smartmenus.min.js");
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/smartmenus/js/nav.min.js");
         }
 
         /**
@@ -360,16 +365,16 @@
 
             if ($this->blnMobileView === true) {
 
-                $strHtml .= _nl('<div class="mobile-nav-header">');
+                $strHtml = '<div class="mobile-nav-header">';
 
                 if ($this->strLogoPath) {
-                    $strHtml .= _nl(_indent('<a class="mobile-logo" href="' . $this->strUrl . '">', 1));
-                    $strHtml .= _nl(_indent('<img src="' . $this->strLogoPath . '" alt="' . $this->strAlternateText . '">', 2));
-                    $strHtml .= _nl(_indent('</a>', 1));
+                    $strHtml .= '<a class="mobile-logo" href="' . $this->strUrl . '">';
+                    $strHtml .= '<img src="' . $this->strLogoPath . '" alt="' . $this->strAlternateText . '">';
+                    $strHtml .= '</a>';
                 }
 
                 $strHtml .= '<button class="mobile-nav-close mobile-nav-toggle" aria-label="' . $this->strCloseMenuText . '">×</button>';
-                $strHtml .= _nl('</div>');
+                $strHtml .= '</div>';
 
             }
 
@@ -426,6 +431,17 @@
             }
 
             $strHtml .= '</li></' . $this->strTagName . '>';
+
+            if ($this->blnNavItems === true) {
+
+                $strHtml .= '<div class="mobile-nav-items"><div class="mobile-nav-search "><div class="mobile-search"><input type="search" placeholder="Otsi..."><button type="submit" class="search-btn" aria-label="Otsi"><img src="/frontend/assets/images/search.svg" alt=""></button></div></div><div class="mobile-badges">';
+                $strHtml .= '<a href="https://facebook.com/kurtideliit" target="_blank"><span class="badge"><img src="/frontend/assets/images/facebook_icon.svg" alt="EKL Facebook"></span></a><a href="https://www.instagram.com/eestikurtideliit" target="_blank"><span class="badge"><img src="/frontend/assets/images/instagram_icon.svg" alt="EKL Instagram"></span></a></div></div>';
+
+            }
+
+            /////////////////////////////
+
+
             $strHtml .= '</div>';
 
             return $strHtml;
@@ -479,6 +495,7 @@
                 case "ExternalUrl": return $this->strExternalUrl;
                 case "TargetType": return $this->strTargetType;
 
+                case "NavWrapperClass": return $this->strNavWrapperClass;
                 case "WrapperClass": return $this->strWrapperClass;
                 case "NavLabel": return $this->strNavLabel;
                 case "Url": return $this->strUrl;
@@ -488,6 +505,8 @@
                 case "TagName": return $this->strTagName;
                 case "TagClass": return $this->strTagClass;
                 case "MobileView ": return $this->blnMobileView;
+                case "NavItems ": return $this->blnNavItems;
+
                 case "DataSource": return $this->objDataSource;
 
                 default:
@@ -619,6 +638,15 @@
                         throw $objExc;
                     }
                     break;
+                case "NavWrapperClass":
+                    try {
+                        $this->blnModified = true;
+                        $this->strNavWrapperClass = Type::cast($mixValue, Type::STRING);
+                    } catch (InvalidCast $objExc) {
+                        $objExc->IncrementOffset();
+                        throw $objExc;
+                    }
+                    break;
                 case "WrapperClass":
                     try {
                         $this->blnModified = true;
@@ -700,6 +728,15 @@
                         throw $objExc;
                     }
                     break;
+                case "NavItems":
+                    try {
+                        $this->blnModified = true;
+                        $this->blnNavItems = Type::cast($mixValue, Type::BOOLEAN);
+                    } catch (InvalidCast $objExc) {
+                        $objExc->IncrementOffset();
+                        throw $objExc;
+                    }
+                    break;
                 case "DataSource":
                     $this->objDataSource = $mixValue;
                     $this->blnModified = true;
@@ -743,7 +780,7 @@
      *      $a['redirect_url'] = $objMenu->MenuContent->RedirectUrl;
      *      $a['homely_url'] = $objMenu->MenuContent->HomelyUrl;
      *      $a['external_url'] = $objMenu->MenuContent->ExternalUrl;
-     *      $a['target_type'] = $objMenu->MenuContent->TargetType ? TargetType::toTarget($objMenu->MenuContent->TargetType) : null;
+     *      $a['target_type'] = $objMenu->MenuContent->TargetType ? TargetType::toTarget($objMenu->MenuContent->TargetType): null;
      *      return $a;
      * }
      *

@@ -90,7 +90,7 @@
         protected function registerFiles(): void
         {
             $this->addCssFile(FRONTEND_HELPERS_ASSETS_URL . "/css/sidebar.css");
-            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/sidebar.js");
+            $this->addJavascriptFile(FRONTEND_HELPERS_ASSETS_URL . "/js/yearsidebar.min.js");
         }
 
         /**
@@ -176,6 +176,36 @@
         {
             parent::wakeup($objForm);
             $this->nodeParamsCallback = ControlBase::wakeupHelper($objForm, $this->nodeParamsCallback);
+        }
+
+        /**
+         * Return the name of the JavaScript setup function that should get called on this control's HTML object. Returning
+         * a value triggers the other jquery widget support.
+         *
+         * @return string
+         */
+        protected function getJqSetupFunction(): string
+        {
+            return 'yearSidebar';
+        }
+
+        /**
+         * Attaches the JQueryUI widget to the HTML object if a widget is specified.
+         */
+        protected function makeJqWidget(): void
+        {
+            $opts = [
+                'limit' => $this->intLimit,
+                'moreLabel' => $this->strMoreLabel ?: 'See more...',
+                'resetLabel' => $this->strResetLabel ?: 'Back to the start',
+            ];
+
+            Application::executeControlCommand(
+                $this->ControlId,
+                $this->getJqSetupFunction(),
+                $opts,
+                ApplicationBase::PRIORITY_HIGH
+            );
         }
 
         /**
@@ -326,214 +356,6 @@
             parent::refresh();
             ControlBase::refresh();
         }
-
-        /**
-         * Generates and returns the JavaScript code for managing user interactions and dynamic behaviors
-         * of the control, including paginated item displays and event handling for custom actions.
-         *
-         * This method builds a script that handles features like scrolling, item visibility toggling,
-         * and user interactions such as clicking "show more" or resetting the view to the default state.
-         * It also integrates with external event systems to trigger additional functionality.
-         *
-         * @return string The generated JavaScript code to be executed on the client side.
-         * @throws Caller
-         */
-        public function getEndScript(): string
-        {
-            $strJS = parent::getEndScript();
-
-            $limit = max(1, $this->intLimit);
-            $moreLabel = $this->strMoreLabel ?: 'See more...';
-            $resetLabel = $this->strResetLabel ?: 'Back to the start';
-
-            $strCtrlJs = <<<FUNC
-(function() {
-  var root = document.getElementById("$this->ControlId");
-  if (!root) { return; }
-
-  root.dataset.page = root.dataset.page || "0";
-
-  function scrollToRoot() {
-    try {
-      root.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-    } catch (e) {
-      root.scrollIntoView(true);
-    }
-  }
-
-  function getItems() {
-    return root.querySelectorAll(".year-item");
-  }
-
-  function getMoreLink() {
-    return root.querySelector(".sidebar-more-link");
-  }
-
-  function setMoreMode(isResetMode) {
-    var link = getMoreLink();
-    if (!link) { return; }
-    link.dataset.mode = isResetMode ? "reset": "more";
-    link.textContent = isResetMode ? {$this->escapeJsString($resetLabel)} : {$this->escapeJsString($moreLabel)};
-  }
-
-  function getActiveIndex() {
-    var active = root.querySelector(".sidebar-link.is-active");
-    if (!active) { return null; }
-    var li = active.closest ? active.closest(".year-item") : null;
-    if (!li) { return null; }
-    var idx = parseInt(li.getAttribute("data-index"), 10);
-    return isNaN(idx) ? null : idx;
-  }
-
-  function getNewestYear() {
-    var first = root.querySelector(".sidebar-link[data-year]");
-    if (!first) { return null; }
-    var y = parseInt(first.getAttribute("data-year"), 10);
-    return isNaN(y) ? null : y;
-  }
-
-    function setYearAndTrigger(year) {
-    if (year === null || isNaN(year)) { return; }
-
-    try {
-      var url = new URL(window.location.href);
-      url.searchParams.set("year", String(year));
-      window.history.replaceState(window.history.state || {}, "", url.toString());
-    } catch (e) {
-      // ignore URL update if unsupported
-    }
-
-    if (window.qcubed && typeof window.qcubed.recordControlModification === "function") {
-      window.qcubed.recordControlModification(root.id, "_Year", year);
-    }
-    if (window.jQuery) {
-      window.jQuery(root).trigger("selectyear");
-    }
-  }
-
-  function showOlderChunk(page) {
-    var items = getItems();
-    var total = items.length;
-    var perPage = $limit;
-
-    var start = perPage + (page * perPage);
-    var end = start + perPage - 1;
-
-    items.forEach(function(li) {
-      var idx = parseInt(li.getAttribute("data-index"), 10);
-      var keepNewest = idx < perPage;
-      var inOlderWindow = (idx >= start && idx <= end);
-
-      if (keepNewest || inOlderWindow) {
-        li.classList.remove("is-hidden");
-      } else {
-        li.classList.add("is-hidden");
-      }
-    });
-
-    var nextStart = start + perPage;
-    setMoreMode(nextStart >= total);
-  }
-
-  function resetToStart(triggerNewest) {
-    var items = getItems();
-    var perPage = $limit;
-
-    items.forEach(function(li) {
-      var idx = parseInt(li.getAttribute("data-index"), 10);
-      if (idx < perPage) {
-        li.classList.remove("is-hidden");
-      } else {
-        li.classList.add("is-hidden");
-      }
-    });
-
-    root.dataset.page = "0";
-    setMoreMode(false);
-
-    if (triggerNewest) {
-      var newest = getNewestYear();
-      var active = root.querySelector(".sidebar-link.is-active");
-      var activeYear = active ? parseInt(active.getAttribute("data-year"), 10) : null;
-
-      if (newest !== null && (activeYear === null || isNaN(activeYear) || activeYear !== newest)) {
-        setYearAndTrigger(newest);
-      }
-    }
-  }
-
-  function ensureActiveVisible() {
-    var activeIdx = getActiveIndex();
-    if (activeIdx === null) { return; }
-
-    var perPage = $limit;
-    if (activeIdx < perPage) {
-      root.dataset.page = "0";
-      setMoreMode(false);
-      return;
-    }
-
-    var page = Math.floor((activeIdx - perPage) / perPage);
-    showOlderChunk(page);
-    root.dataset.page = String(page + 1);
-  }
-
-  function ensureDefaultActive() {
-    var hasActive = root.querySelector(".sidebar-link.is-active");
-    if (hasActive) { return; }
-
-    var newestLink = root.querySelector(".sidebar-link[data-year]");
-    if (newestLink) {
-      newestLink.classList.add("is-active");
-    }
-  }
-
-  setMoreMode(false);
-  ensureDefaultActive();
-  ensureActiveVisible();
-
-
-  root.addEventListener("click", function(e) {
-    var a = e.target && e.target.closest ? e.target.closest("a") : null;
-    if (!a) { return; }
-
-    var action = a.getAttribute("data-action");
-
-    if (action === "show-more") {
-      e.preventDefault();
-
-      var mode = a.dataset.mode || "more";
-      if (mode === "reset") {
-        resetToStart(true);
-        scrollToRoot();
-        return;
-      }
-
-      var page = parseInt(root.dataset.page || "0", 10);
-      if (isNaN(page)) { page = 0; }
-
-      showOlderChunk(page);
-      root.dataset.page = String(page + 1);
-      scrollToRoot();
-      return;
-    }
-
-    if (a.classList.contains("sidebar-link") && a.hasAttribute("data-year") && !action) {
-      var year = parseInt(a.getAttribute("data-year"), 10);
-      if (isNaN(year)) { return; }
-
-      e.preventDefault();
-      setYearAndTrigger(year);
-    }
-  });
-})();
-FUNC;
-
-            Application::executeJavaScript($strCtrlJs, ApplicationBase::PRIORITY_HIGH);
-
-            return $strJS;
-        }
-
 
         /**
          * Escapes a given string to make it safe for use in JavaScript by encoding it as a JSON string.

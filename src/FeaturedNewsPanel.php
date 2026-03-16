@@ -12,6 +12,7 @@
     class FeaturedNewsPanel extends BindablePanel
     {
         protected string $strTemplate = 'FeaturedNewsPanel.tpl.php';
+        protected object $objSiteOptions;
 
         public array $DataSource = [];
     }
