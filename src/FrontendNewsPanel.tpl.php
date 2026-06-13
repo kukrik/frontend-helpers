@@ -12,12 +12,11 @@
     $objContentMediaRender->EmptyMediaUrl = FRONTEND_HELPERS_ASSETS_URL . "/images/no-image-660-365.jpg";
     $objContentMediaRender->UseWrapper = false;
     ?>
-    <a href="<?php _p($news->getTitleSlug(), false) ?>">
-        <article class="news-card">
-<?php $objContentMediaRender->render(); ?>
-            <h3><?php _p($news->getTitle(), false); if ($news->getChangesId()) { ?><span class="news-card-change"><?php _p($news->getChanges(), false); ?></span><?php } ?></h3>
+    <a href="<?= $news->getTitleSlug() ?>">
+        <article class="news-card"><?= _indent(_r($objContentMediaRender), 5); ?>
+            <h3><?= $news->getTitle(); if ($news->getChangesId()) { ?><span class="news-card-change"><?= $news->getChanges(); ?></span><?php } ?></h3>
         </article>
-            </a>
-    <?php } ?>
+    </a>
+<?php } ?>
 </section>
 

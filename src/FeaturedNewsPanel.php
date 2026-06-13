@@ -11,6 +11,7 @@
      */
     class FeaturedNewsPanel extends BindablePanel
     {
+        protected string $strJavaScripts = FRONTEND_HELPERS_ASSETS_URL . '/js/featured-news.min.js';
         protected string $strTemplate = 'FeaturedNewsPanel.tpl.php';
         protected object $objSiteOptions;
 

@@ -2,6 +2,7 @@
 
     namespace QCubed\Plugin;
 
+    use QCubed as Q;
     use Exception;
     use QCubed\Control\Panel;
     use QCubed\Exception\Caller;
@@ -23,7 +24,9 @@
      */
     class FrontResults extends Panel
     {
-        public array $DataSource = [];
+        use Q\Control\DataBinderTrait;
+
+        public array $objDataSource = [];
 
         protected string $strTemplate = 'FrontResults.tpl.php';
 
@@ -31,7 +34,7 @@
         protected string $strWrapperClass = 'event-list';
 
         protected string $strTitle = 'Results';
-        protected string $strEmptyText = 'There are currently no results.';
+        protected string $strEmptyText = 'There are currently no results';
 
 
         /** @var callable|null */
@@ -105,18 +108,53 @@
         }
 
         /**
-         * Generates and returns the HTML for the control by rendering a tag with specified attributes and inner content.
+         * Generates the HTML output for the control.
+         *
+         * The method handles data binding, processes the data source to build parameters, and renders
+         * the control's HTML tag with its inner content.
          *
          * @return string The rendered HTML for the control.
+         * @throws Caller
          */
         protected function getControlHtml(): string
         {
+           $this->dataBind();
+
+            if (empty($this->objDataSource)) {
+                $this->objDataSource = [];
+            }
+
             return $this->renderTag(
                 $this->strTagName,
                 $this->strWrapperClass ? ['class' => $this->strWrapperClass] : null,
                 null,
                 $this->getInnerHtml()
             );
+        }
+
+
+        /**
+         * Binds data to the control by executing the DataBinder, if available.
+         *
+         * This method checks if a DataBinder is set and whether the control has not yet been rendered.
+         * If those conditions are satisfied, it invokes the DataBinder.
+         * Any exceptions thrown during the process are caught, their stack trace offset is incremented,
+         * and they are rethrown for further handling.
+         *
+         * @return void
+         * @throws Caller If an error occurs while calling the DataBinder.
+         */
+        public function dataBind(): void
+        {
+            // Run the DataBinder (if applicable)
+            if ($this->hasDataBinder() && !$this->blnRendered) {
+                try {
+                    $this->callDataBinder();
+                } catch (Caller $objExc) {
+                    $objExc->incrementOffset();
+                    throw $objExc;
+                }
+            }
         }
 
         /**
@@ -135,6 +173,7 @@
                 'WrapperClass' => $this->strWrapperClass,
                 'Title' => $this->strTitle,
                 'EmptyText' => $this->strEmptyText,
+                'DataSource' =>$this->objDataSource,
                 default => parent::__get($strName),
             };
         }
@@ -163,6 +202,9 @@
                 case 'EmptyText':
                     $this->strEmptyText = Type::cast($mixValue, Type::STRING);
                     break;
+                case "DataSource":
+                    $this->objDataSource = $mixValue;
+                    break;
 
                 default:
                     parent::__set($strName, $mixValue);
@@ -179,35 +221,6 @@
  * $frontResults = new \QCubed\Plugin\FrontResults($this);
  * $frontResults->Title = 'Results';
  * $frontResults->EmptyText= 'There are currently no results.';
- * $frontResults->createItemParams(function ($n) {
- *      return [
- *          'title' => $n->getTitle(),
- *          'url' => $n->getTitleSlug(),
- *          'date' => $n->getPostDate()? $n->getPostDate()->qFormat('DD.MM.YYYY'): null,
- *      ];
- * });
  *
- * $data = FrontendLinks::loadByIdFromFrontedLinksId($linkedId);
- * $objNews = News::load($data->LinkedId);
- * $pageContext->DataSource = News::loadOlderForPageContext (
- *      $objNews->Id,
- *      $objNews->PostDate,
- *      $data->GroupedId,
- *      5
- * );
- *
- * ****************************
- *
- * EXAMPLE: Context integration into the frontend gallery list
- *
- * $data = FrontendLinks::loadByIdFromFrontedLinksId($linkedId);
- * $objGalleryList = GalleryList::load($data->LinkedId);
- *
- * $pageContext->DataSource = GalleryList::loadOlderForPageContext (
- *      $objGalleryList->Id,
- *      $objGalleryList->PostDate,
- *      $data->GroupedId,
- *      5
- * );
  *
  */

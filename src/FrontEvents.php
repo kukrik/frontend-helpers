@@ -1,6 +1,10 @@
 <?php
 
-    /** This file contains the FrontEvents Class */
+    /**
+     * Refreshes the control's state and updates the Control with new data where necessary.
+     *
+     * @return void
+     */
 
     namespace QCubed\Plugin;
 
@@ -10,7 +14,6 @@
     use QCubed\Control\ControlBase;
     use QCubed\Exception\Caller;
     use QCubed\Exception\InvalidCast;
-    use QCubed\Exception\DataBind;
     use Exception;
     use QCubed\Project\Application;
     use QCubed\QDateTime;
@@ -317,14 +320,11 @@
         }
 
         /**
-         * Binds data to the object by calling the data binder method if the object
-         * is not already rendered, there is no data source already present, and
-         * a data binder is defined. If an exception occurs during the binding process,
-         * the exception offset is incremented before being thrown.
+         * Binds data to the control using a data binder, if available and applicable.
+         * Executes the data binding logic, ensuring the control is updated with the appropriate data.
          *
          * @return void
-         * @throws Caller
-         * @throws DataBind
+         * @throws Caller If an error occurs during the data binding process.
          */
         public function dataBind(): void
         {

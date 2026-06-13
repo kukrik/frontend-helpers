@@ -144,7 +144,7 @@
             if (!li.classList.contains('is-open')) {
                 e.preventDefault();
                 toggleBranch(li);
-                return;
+
             }
 
             // Kui haru on lahti -> lubame navigeerida (ei preventDefault)

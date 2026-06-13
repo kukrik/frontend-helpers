@@ -27,23 +27,20 @@
 
 <section class="block block--featured">
     <article class="featured-item">
-        <a href="<?php _p($news->getTitleSlug(), false) ?>" class="featured-link">
+        <div class="featured-link js-clickable-card" data-href="<?= $news->getTitleSlug() ?>" tabindex="0" role="link">
             <div class="featured-content">
-                <h2 class="featured-title"><?php _p($news->getTitle(), false) ?></h2>
-                <time class="featured-date" datetime="<?php _p($objFeaturedTime, false) ?>"><?php _p($objFeaturedDate, false); if ($news->getChangesId()) { ?>
+                <h2 class="featured-title"><?= $news->getTitle() ?></h2>
+                <time class="featured-date" datetime="<?= $objFeaturedTime ?>"><?= $objFeaturedDate; if ($news->getChangesId()) { ?>
 
-                    <span class="featured-change"><?php _p(_indent($news->getChanges(), 12), false); ?>
+                        <span class="featured-change"><?= _indent($news->getChanges(), 12); ?>
 
-                    </span><?php } ?></time>
+                        </span><?php } ?></time>
                 <div class="featured-excerpt">
-                    <?php _p($news->getContent(), false) ?>
+                    <?= $news->getContent() ?>
                 </div>
             </div>
-            <div class="featured-media">
-                <?php $objContentMediaRender->render(); ?>
+            <div class="featured-media"><?= _indent(_r($objContentMediaRender), 6); ?>
             </div>
-        </a>
+        </div>
     </article>
 </section>
-
-
